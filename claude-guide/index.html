@@ -88,7 +88,29 @@
   footer{text-align:center;color:var(--sub);font-size:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
   a.toplink{color:var(--accent-deep);text-decoration:none;font-weight:600}
 
-  @media(max-width:520px){header.hero h1{font-size:21px}.a{padding-left:18px}.tab{font-size:13px}}
+  /* canva guide */
+  .guide-intro{background:var(--accent-soft);border:1px solid #e8d0c6;border-radius:var(--radius);padding:17px 18px;margin:18px 0 6px}
+  .guide-intro h2{margin:0 0 6px;font-size:17px;color:var(--accent-deep)}
+  .guide-intro p{margin:0;color:var(--ink);font-size:13.8px}
+  .gflow{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px}
+  .gflow span{background:var(--card);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:700;color:var(--sub);padding:5px 11px}
+  .gflow span b{color:var(--accent-deep)}
+  .gstep{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+  .gstep-head{display:flex;gap:12px;align-items:flex-start;padding:16px 18px 6px}
+  .gnum{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .gstep-head h3{margin:0;font-size:16px;font-weight:800}
+  .gstep-head .sub{margin:3px 0 0;font-size:12.5px;color:var(--sub);font-weight:600}
+  .gbody{padding:2px 18px 16px 60px}
+  .gbody p{margin:0 0 9px;font-size:14px}
+  .gbody ul{margin:6px 0 12px;padding-left:20px;font-size:13.8px}
+  .gbody li{margin:4px 0}
+  .gbody strong{color:var(--accent-deep)}
+  .gshot{display:block;width:100%;border:1px solid var(--line);border-radius:10px;margin:10px 0 4px;box-shadow:0 1px 5px rgba(20,25,35,.10)}
+  .gcap{font-size:11.5px;color:var(--sub);margin:0 0 14px;text-align:center}
+  .gtip{background:#f3f7f4;border-left:3px solid #3a7d4f;border-radius:8px;padding:9px 13px;margin:8px 0 4px;font-size:13px;color:var(--ink)}
+  .gtip b{color:#3a7d4f}
+
+  @media(max-width:520px){header.hero h1{font-size:21px}.a{padding-left:18px}.tabs{flex-wrap:wrap}.tab{font-size:12.5px;flex:1 1 40%}.gbody{padding-left:18px}}
 </style>
 </head>
 <body>
@@ -151,6 +173,100 @@
     <div class="noresult" id="noresult3">該当する用語が見つかりませんでした。</div>
   </div>
 
+  <!-- ====== CANVA FLYER GUIDE (活用方法タブ内に表示) ====== -->
+  <div id="flyer-guide" style="display:none">
+    <div class="section-title">チラシ作成：Claude × Canva の手順</div>
+    <div class="guide-intro">
+      <h2>🎨 Claude × Canva でチラシを作る</h2>
+      <p>「こんなチラシが欲しい」と<strong>言葉で伝えるだけ</strong>で、Claudeが Canva に本格デザインのたたき台を作ってくれます。さらに Chrome 拡張を入れれば、Canva の編集画面で Claude に直接指示して微調整までできます。</p>
+      <div class="gflow">
+        <span><b>STEP1</b> Canvaコネクタ追加</span>
+        <span><b>STEP2</b> プロンプトで生成</span>
+        <span><b>STEP3</b> Canvaで確認</span>
+        <span><b>STEP4</b> Chrome拡張を導入</span>
+        <span><b>STEP5</b> その場で直接編集</span>
+      </div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="gstep">
+      <div class="gstep-head"><span class="gnum">1</span><div><h3>Canvaコネクタを追加する</h3><p class="sub">Claude と Canva をつなぐ準備（最初の1回だけ）</p></div></div>
+      <div class="gbody">
+        <p>Claude Code の入力欄左下の<strong>「＋」</strong>をクリック →「<strong>コネクタ</strong>」→「<strong>コネクタを追加</strong>」を選びます。</p>
+        <img class="gshot" src="1.png" alt="＋メニューからコネクタを追加を開く">
+        <p class="gcap">＋ →「コネクタ」→「コネクタを追加」</p>
+        <p>検索窓に「<strong>canva</strong>」と入力し、表示された <strong>Canva</strong>（Anthropic &amp; パートナー）を選んで追加。画面の案内に従って Canva アカウントと連携（アクセスを許可）します。</p>
+        <img class="gshot" src="2.png" alt="コネクタ一覧でcanvaを検索して追加">
+        <p class="gcap">「canva」で検索 → Canva を追加して連携</p>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="gstep">
+      <div class="gstep-head"><span class="gnum">2</span><div><h3>プロンプトでチラシのたたき台を作る</h3><p class="sub">作りたいチラシを言葉で伝えるだけ</p></div></div>
+      <div class="gbody">
+        <p>どんなチラシが欲しいかを伝えると、Claude がコネクタ経由で Canva にデザイン候補を生成します。</p>
+        <div class="prompt"><button class="copy">コピー</button><span class="label">プロンプト①（最初の依頼）</span>Canvaでマシンピラティスの体験会のフライヤーを作成してください。
+フライヤーは縦型でA4サイズです。</div>
+        <img class="gshot" src="3.png" alt="Canvaのデザイン生成ツールを呼び出している様子">
+        <p class="gcap">Claude が Canva のデザイン生成ツール（generate-design）を呼び出す</p>
+        <p>しばらくすると、<strong>複数のデザイン候補</strong>とプレビューリンクが返ってきます。気に入った案を選びます。</p>
+        <img class="gshot" src="4.png" alt="4種類のデザイン候補とプレビューリンク">
+        <p class="gcap">候補とプレビューリンクが提示される → 好きな案を選ぶ</p>
+        <p>採用する案を伝え、<strong>スタジオ名・開催日・料金・定員</strong>などの具体情報を渡すと、Canva に正式保存しながら内容を反映してくれます。</p>
+        <div class="prompt"><button class="copy">コピー</button><span class="label">プロンプト②（案を選んで情報を反映）</span>候補4のデザインで、配色は明るい水色にしてください。
+スタジオ名：repilates神楽坂店
+開催日：7/10〜7/20
+体験料金：0円
+定員：15名で</div>
+        <img class="gshot" src="5.png" alt="選んだ候補をCanvaに保存し情報を反映">
+        <p class="gcap">選んだ案を Canva に保存し、渡した情報を反映</p>
+        <p>さらに案を絞り込み、最終的に採用する案を伝えます。</p>
+        <img class="gshot" src="6.png" alt="候補を1つに絞り込む">
+        <p class="gcap">「C案で」のように一言で決定できる</p>
+        <p>最後に <strong>連絡先（TEL・住所・LINE/Instagram）</strong>などを確定すると、保存が完了します。</p>
+        <img class="gshot" src="7.png" alt="連絡先を確定して保存完了">
+        <p class="gcap">内容を確定 → 保存完了。編集用リンクも返ってくる</p>
+        <div class="gtip"><b>コツ</b>　最初から完璧を狙わず、「案を選ぶ → 情報を足す → 微調整」と<strong>会話で継ぎ足す</strong>のがうまくいきます。実データではなく架空・公開してよい情報で進めると安全です。</div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="gstep">
+      <div class="gstep-head"><span class="gnum">3</span><div><h3>できたチラシを Canva で開いて確認</h3><p class="sub">仕上げは Canva の編集画面で</p></div></div>
+      <div class="gbody">
+        <p>Claude が返す<strong>「Canvaで開く」リンク</strong>から編集画面へ。写真や文字の最終調整は Canva 上で行えます。</p>
+        <img class="gshot" src="8.png" alt="Canvaの編集画面で完成したフライヤー">
+        <p class="gcap">Canva の編集画面で完成したフライヤーを確認</p>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="gstep">
+      <div class="gstep-head"><span class="gnum">4</span><div><h3>Chrome拡張「Claude in Chrome」を入れる</h3><p class="sub">Canvaの画面で Claude に直接指示するための準備</p></div></div>
+      <div class="gbody">
+        <p>Canva の編集画面で Claude に直接指示するには、Chrome 拡張を入れます。まず <strong>Chrome ウェブストア</strong>を開きます（Google で「拡張機能」を検索 → Chrome ウェブストア、または <code>chromewebstore.google.com</code>）。</p>
+        <img class="gshot" src="9.png" alt="Googleで拡張機能を検索しChromeウェブストアを開く">
+        <p class="gcap">「拡張機能」を検索 → Chrome ウェブストアへ</p>
+        <p>検索窓で「<strong>claude</strong>」を検索し、<strong>Claude（Claude in Chrome / Beta）</strong>を選んで「<strong>Chromeに追加</strong>」します。会社アカウントでログインしてください。</p>
+        <img class="gshot" src="10.png" alt="ウェブストアでclaudeを検索しClaude in Chromeを追加">
+        <p class="gcap">「claude」を検索 → 「Claude」を選んで Chrome に追加</p>
+        <div class="gtip"><b>注意</b>　拡張機能の導入は<strong>会社のルールに従って</strong>。権限を求められたら、何にアクセスするか確認してから許可しましょう。</div>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="gstep">
+      <div class="gstep-head"><span class="gnum">5</span><div><h3>Canvaの編集画面で Claude に直接指示する</h3><p class="sub">「文字色を濃くして」と頼むだけで反映</p></div></div>
+      <div class="gbody">
+        <p>拡張を入れると、Canva の編集画面の<strong>右側に Claude パネル</strong>が出ます。「文字色を濃い水色にして」のように指示すると、Claude が<strong>その場で Canva を操作</strong>して反映します。</p>
+        <img class="gshot" src="12.png" alt="Canva編集画面の右側でClaudeに指示して操作">
+        <p class="gcap">右側の Claude パネルに指示 → Canva をその場で編集してくれる</p>
+        <div class="gtip"><b>使い分け</b>　ゼロから作る・大きく変えるときは <strong>STEP2 のプロンプト</strong>、できあがったデザインの細かい調整は <strong>STEP5 の画面内チャット</strong>が便利です。</div>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <p>困ったときは、まず<strong>「やりたいこと」を日本語でそのままClaudeに伝える</strong>のが一番の近道です。<br>
     エラーが出たら、そのエラー文をコピーして貼るだけでも直し方を教えてくれます。</p>
@@ -160,6 +276,7 @@
 </div>
 
 <script>
+var currentView='qa';
 /* ================= Q&A データ ================= */
 const DATA = [
  {cat:"基本", q:"そもそも Claude Code って何ができるの？", a:`<p>会話で相談するだけのチャットAIと違い、<strong>フォルダ内のファイルを読み・直し・成果物として保存する</strong>「作業まで進めるAI」です。</p><ul><li>Excel・Word・PDF・テキストを読んで集計・整理・変換</li><li>関数やマクロのコードを書く</li><li>請求書チェックや議事録づくりなどを自動化</li></ul><p>ポイントは「会話で終わらず、実際のファイルが手元に残る」こと。</p>`},
@@ -427,6 +544,17 @@ let activeCat2=ALL;
 const ucCats=[ALL,...[...new Set(USE.map(d=>d.cat))]];
 ucCats.forEach(c=>{const b=document.createElement('button');b.className='cat'+(c===ALL?' active':'');b.textContent=c;b.onclick=()=>{activeCat2=c;[...cats2.children].forEach(x=>x.classList.toggle('active',x.textContent===c));renderUse();};cats2.appendChild(b);});
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+/* チラシ作成ガイドの表示制御（活用方法タブ・該当カテゴリ/検索のときだけ表示） */
+function updateFlyerGuide(){
+  const fg=document.getElementById('flyer-guide');if(!fg)return false;
+  const kw=search2.value.trim().toLowerCase();
+  const blob='canva チラシ フライヤー flyer コネクタ chrome 拡張 拡張機能 claude in chrome 印刷 デザイン pop ポップ 連携 マシンピラティス a4 ポスター 作成方法 手順'.toLowerCase();
+  const catOk=(activeCat2===ALL||activeCat2==='チラシ・POP');
+  const kwOk=(!kw||blob.includes(kw));
+  const on=(currentView==='use'&&catOk&&kwOk);
+  fg.style.display=on?'block':'none';
+  return on;
+}
 function renderUse(){
   const kw=search2.value.trim().toLowerCase();list2.innerHTML='';let shown=0;
   ucCats.filter(c=>c!==ALL).forEach(c=>{
@@ -446,7 +574,8 @@ function renderUse(){
       html+=`</div>`;card.innerHTML=html;list2.appendChild(card);
     });
   });
-  noresult2.style.display=shown===0?'block':'none';
+  const guideOn=updateFlyerGuide();
+  noresult2.style.display=(shown===0&&!guideOn)?'block':'none';
   count2.textContent=(kw||activeCat2!==ALL)?`${shown}件の活用例を表示中`:`全${USE.length}件の活用例`;
   // copyボタン
   list2.querySelectorAll('.copy').forEach(btn=>{
@@ -630,6 +759,14 @@ function syncSearch(val){
 }
 [search,search2,search3].forEach(inp=>inp.addEventListener('input',e=>syncSearch(e.target.value)));
 
+/* ===== Canvaガイドのコピー ===== */
+document.querySelectorAll('#flyer-guide .copy').forEach(btn=>{
+  btn.onclick=()=>{
+    const box=btn.closest('.prompt');
+    navigator.clipboard.writeText(getPromptText(box)).then(()=>{btn.textContent='コピー済み';btn.classList.add('done');setTimeout(()=>{btn.textContent='コピー';btn.classList.remove('done');},1500);});
+  };
+});
+
 /* ================= タブ切替 ================= */
 document.querySelectorAll('.tab').forEach(t=>{
   t.onclick=()=>{
@@ -639,6 +776,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.getElementById('view-qa').classList.toggle('active',v==='qa');
     document.getElementById('view-use').classList.toggle('active',v==='use');
     document.getElementById('view-glossary').classList.toggle('active',v==='glossary');
+    currentView=v;updateFlyerGuide();
     window.scrollTo({top:0,behavior:'smooth'});
   };
 });
