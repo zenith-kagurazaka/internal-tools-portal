@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 使い方Q&A ＆ 活用集｜入門講座</title>
+<style>
+  :root{
+    --bg:#f6f7f9;--card:#ffffff;--ink:#1f2430;--sub:#5b6472;--line:#e6e8ec;
+    --accent:#c96442;--accent-soft:#fbeee9;--accent-deep:#a64e30;--chip:#eef0f3;
+    --shadow:0 1px 2px rgba(20,25,35,.06),0 8px 24px rgba(20,25,35,.05);--radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 18px 80px}
+
+  header.hero{background:linear-gradient(135deg,#c96442 0%,#a64e30 100%);color:#fff;padding:46px 18px 40px;text-align:center;}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  .badge{display:inline-block;font-size:12px;letter-spacing:.08em;font-weight:600;background:rgba(255,255,255,.18);padding:5px 12px;border-radius:999px;margin-bottom:14px;}
+  header.hero h1{margin:0 0 10px;font-size:27px;font-weight:800;letter-spacing:.01em}
+  header.hero p{margin:0;font-size:15px;opacity:.92}
+
+  /* tabs */
+  .tabs{max-width:880px;margin:-22px auto 0;padding:0 18px;display:flex;gap:10px;position:relative;z-index:5}
+  .tab{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;box-shadow:var(--shadow);transition:.15s;font-weight:700;font-size:15px;color:var(--sub)}
+  .tab .tt{display:block;font-size:12px;font-weight:600;color:#9aa3b2;margin-top:2px}
+  .tab.active{border-color:var(--accent);color:var(--accent-deep)}
+  .tab.active .tt{color:var(--accent)}
+  .tab:hover{border-color:var(--accent)}
+
+  .searchbar{position:sticky;top:0;z-index:20;background:var(--bg);padding:16px 0 6px}
+  .search-inner{background:var(--card);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:10px;padding:11px 14px;box-shadow:var(--shadow);}
+  .search-inner svg{flex:0 0 auto;opacity:.5}
+  .search-inner input{border:0;outline:0;font-size:15px;width:100%;background:transparent;color:var(--ink);font-family:inherit;}
+  .count{font-size:12px;color:var(--sub);padding:6px 2px 0}
+
+  .cats{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 8px}
+  .cat{border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s;user-select:none;font-family:inherit;}
+  .cat:hover{border-color:var(--accent)}
+  .cat.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .section-title{font-size:15px;font-weight:800;color:var(--accent-deep);margin:30px 0 12px;padding-left:12px;border-left:4px solid var(--accent);}
+
+  /* qa */
+  details.qa{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden;transition:.15s;}
+  details.qa[open]{border-color:#e2c5ba}
+  summary.q{list-style:none;cursor:pointer;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;font-weight:700;font-size:15.5px;}
+  summary.q::-webkit-details-marker{display:none}
+  .qmark{flex:0 0 auto;width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent-deep);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .qtext{flex:1}
+  .chev{flex:0 0 auto;transition:.2s;opacity:.4;margin-top:4px}
+  details.qa[open] .chev{transform:rotate(180deg)}
+  .a{padding:0 18px 18px 54px;color:var(--ink);font-size:14.5px}
+  .a p{margin:0 0 10px}.a ul{margin:6px 0 12px;padding-left:20px}.a li{margin:4px 0}.a strong{color:var(--accent-deep)}
+
+  /* use-case card */
+  .uc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden}
+  .uc-head{padding:15px 18px 4px}
+  .uc-cat{display:inline-block;font-size:11px;font-weight:700;color:var(--accent-deep);background:var(--accent-soft);border-radius:6px;padding:2px 9px;margin-bottom:8px}
+  .uc h3{margin:0 0 4px;font-size:16px;font-weight:800}
+  .uc .desc{margin:0;color:var(--sub);font-size:13.5px;padding:0 18px 6px}
+  .uc-body{padding:6px 18px 16px}
+  .uc ul.points{margin:4px 0 10px;padding-left:20px;font-size:13.5px;color:var(--ink)}
+  .uc ul.points li{margin:3px 0}
+
+  .prompt{background:#2b2f3a;color:#e8eaf0;border-radius:10px;padding:13px 15px 13px;margin:10px 0 0;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;position:relative}
+  .prompt .label{display:block;font-size:10px;letter-spacing:.1em;color:#9aa3b2;margin-bottom:7px;font-family:inherit;font-weight:700}
+  .copy{position:absolute;top:9px;right:9px;background:rgba(255,255,255,.12);border:0;color:#cfd5e0;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer;font-family:inherit;transition:.15s}
+  .copy:hover{background:rgba(255,255,255,.22)}
+  .copy.done{background:#3a7d4f;color:#fff}
+
+  /* glossary */
+  .term{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:9px;box-shadow:var(--shadow);padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+  .term .kind{flex:0 0 auto;font-size:10px;font-weight:800;border-radius:6px;padding:3px 7px;margin-top:3px;min-width:34px;text-align:center}
+  .kind.abc{background:#e7f0fb;color:#2f6bb0}
+  .kind.kana{background:#fbeee9;color:var(--accent-deep)}
+  .kind.kanji{background:#eaf3ec;color:#3a7d4f}
+  .term .body{flex:1}
+  .term .name{font-weight:800;font-size:15.5px;margin:0 0 2px}
+  .term .name .read{font-size:12px;font-weight:600;color:var(--sub);margin-left:6px}
+  .term .def{margin:0;font-size:13.8px;color:var(--ink)}
+  .term .def b{color:var(--accent-deep)}
+
+  .noresult{text-align:center;color:var(--sub);padding:40px 0;display:none}
+  .view{display:none}.view.active{display:block}
+
+  footer{text-align:center;color:var(--sub);font-size:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  a.toplink{color:var(--accent-deep);text-decoration:none;font-weight:600}
+
+  @media(max-width:520px){header.hero h1{font-size:21px}.a{padding-left:18px}.tab{font-size:13px}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="inner">
+    <span class="badge">Claude Code 入門講座（バックオフィス／クリエイティブ）</span>
+    <h1>Claude 使い方ガイド</h1>
+    <p>困ったときの Q&amp;A と、コピペで使える活用プロンプト集。講座の内容をまとめました。</p>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-view="qa">❓ 使い方Q&amp;A<span class="tt">つまずきを解決</span></div>
+  <div class="tab" data-view="use">⚡ 活用方法<span class="tt">コピペで使える実例</span></div>
+  <div class="tab" data-view="glossary">📖 用語集<span class="tt">わからない言葉を引く</span></div>
+</div>
+
+<div class="wrap">
+
+  <!-- ====== Q&A VIEW ====== -->
+  <div class="view active" id="view-qa">
+    <div class="searchbar">
+      <div class="search-inner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="キーワードで検索（例：Skill 呼び出せない、突合、プロンプト）" autocomplete="off">
+      </div>
+      <div class="count" id="count"></div>
+    </div>
+    <div class="cats" id="cats"></div>
+    <div id="list"></div>
+    <div class="noresult" id="noresult">該当する質問が見つかりませんでした。別のキーワードでお試しください。</div>
+  </div>
+
+  <!-- ====== USE-CASE VIEW ====== -->
+  <div class="view" id="view-use">
+    <div class="searchbar">
+      <div class="search-inner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search2" type="text" placeholder="やりたいことで検索（例：LP、チラシ、Instagram、突合、レポート）" autocomplete="off">
+      </div>
+      <div class="count" id="count2"></div>
+    </div>
+    <div class="cats" id="cats2"></div>
+    <div id="list2"></div>
+    <div class="noresult" id="noresult2">該当する活用例が見つかりませんでした。</div>
+  </div>
+
+  <!-- ====== GLOSSARY VIEW ====== -->
+  <div class="view" id="view-glossary">
+    <div class="searchbar">
+      <div class="search-inner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search3" type="text" placeholder="言葉で検索（例：プロンプト、突合、CTA、マクロ）" autocomplete="off">
+      </div>
+      <div class="count" id="count3"></div>
+    </div>
+    <div class="cats" id="cats3"></div>
+    <div id="list3"></div>
+    <div class="noresult" id="noresult3">該当する用語が見つかりませんでした。</div>
+  </div>
+
+  <footer>
+    <p>困ったときは、まず<strong>「やりたいこと」を日本語でそのままClaudeに伝える</strong>のが一番の近道です。<br>
+    エラーが出たら、そのエラー文をコピーして貼るだけでも直し方を教えてくれます。</p>
+    <p><a class="toplink" href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">↑ 先頭に戻る</a></p>
+    <p style="margin-top:14px;opacity:.7">社内 Claude 入門講座より作成 ／ オフラインでも閲覧できます</p>
+  </footer>
+</div>
+
+<script>
+/* ================= Q&A データ ================= */
+const DATA = [
+ {cat:"基本", q:"そもそも Claude Code って何ができるの？", a:`<p>会話で相談するだけのチャットAIと違い、<strong>フォルダ内のファイルを読み・直し・成果物として保存する</strong>「作業まで進めるAI」です。</p><ul><li>Excel・Word・PDF・テキストを読んで集計・整理・変換</li><li>関数やマクロのコードを書く</li><li>請求書チェックや議事録づくりなどを自動化</li></ul><p>ポイントは「会話で終わらず、実際のファイルが手元に残る」こと。</p>`},
+ {cat:"基本", q:"Chat / Cowork / Code の違いは？", a:`<p>Claude には3つの顔があります。</p><ul><li><strong>Claude Chat（相談）</strong>：質問・文章作成・壁打ち。入口として使いやすい。</li><li><strong>Claude Cowork（伴走）</strong>：画面を一緒に見ながら操作や考え方をその場で相談。</li><li><strong>Claude Code（実行）</strong>：フォルダ内のファイルを読み、修正し、成果物を作る。<strong>講座の主役はこれ</strong>。</li></ul><p>Chatをよく使う人ほど、Codeにすると「ファイルがそのまま残る」違いを実感できます。</p>`},
+ {cat:"基本", q:"Claude と Codex / Antigravity は何が違う？", a:`<ul><li><strong>Claude（Anthropic）</strong>：文章・資料・表・ファイル操作。日本語の実務と手順化に強い。講座の主役。</li><li><strong>Codex（OpenAI）</strong>：コード編集・修正・検証を並列で進める開発寄り。</li><li><strong>Antigravity（Google）</strong>：Gemini系のエージェント型開発環境。</li></ul><p>全部を使い分ける必要はありません。まずはClaudeを業務で使える状態にすればOKです。</p>`},
+ {cat:"導入", q:"最初のセットアップ手順は？", a:`<p>5ステップで始められます。</p><ul><li>① Claude Codeを起動し、Team Standardのアカウントでログイン</li><li>② 練習用フォルダを作る</li><li>③ そのフォルダを「作業フォルダ」として指定する</li><li>④ 確認モードで開始する</li><li>⑤ 最初のファイル作成を実行して、結果を確認する</li></ul><p>完璧に覚えるより、まず1つ動かすことが大事です。</p>`},
+ {cat:"導入", q:"最初の指示（プロンプト）は何を出せばいい？", a:`<p>まずはファイルを1つ作らせてみましょう。会話だけで終わらず、実際にファイルが残る体験ができます。</p><div class="prompt"><span class="label">サンプルプロンプト</span>このフォルダに「月次チェック.txt」を作って、月末に確認する項目を5つ書いてください。</div><p>実行後、フォルダを開いてファイルができているか確認します。</p>`},
+ {cat:"導入", q:"作業フォルダの中身を理解させたい", a:`<p>「作業場所」を理解させると、会話が一気に実務に近づきます。</p><div class="prompt"><span class="label">サンプルプロンプト</span>このフォルダの中身を確認して、どんなファイルがあるか一覧で教えてください。
+次に、練習で使うためのREADME.mdを作ってください。</div>`},
+ {cat:"導入", q:"確認モードと自動モード、どっちを使えばいい？", a:`<ul><li><strong>確認モード</strong>：初回・重要ファイル・不安な時。変更前に人が確認する。</li><li><strong>自動モード</strong>：練習・軽い修正・慣れた作業。任せる範囲を決めて進める。</li></ul><p>研修中・初心者は<strong>確認モードが基本</strong>。慣れてきたら自動モードに広げます。</p>`},
+ {cat:"導入", q:"アドイン（Chrome / Office）がうまく動かない", a:`<p>迷いやすい点を順番にチェックします。</p><ul><li>① 会社アカウントでログインしているか確認</li><li>② 拡張機能やアドインは、会社ルールに従って入れる</li><li>③ 権限を求められたら、何にアクセスするか確認する</li><li>④ 動かない時は <strong>ブラウザ再起動 → ログイン確認 → 権限確認</strong> の順で見る</li></ul><p>Excel／PowerPoint／Word内でClaudeを使う「Claude for Microsoft 365」は、会社では管理者展開が必要な場合があります。勝手に回避せず、まず管理者に確認しましょう。</p>`},
+ {cat:"セキュリティ", q:"入れていいデータ・ダメなデータは？", a:`<p><strong>避けるもの</strong></p><ul><li>個人情報（氏名＋住所／電話／番号）</li><li>機密情報（未公開数字・契約書原本）</li><li>認証情報（ID・パスワード）→ 絶対に入れない</li><li>実データ原本</li></ul><p><strong>OK例</strong></p><ul><li>Aさん・B社などに匿名化したもの</li><li>架空数字・公開情報</li><li>コピー・サンプルデータ</li></ul><p>会社のルールと匿名化が基本です。</p>`},
+ {cat:"セキュリティ", q:"安全に始めるコツは？", a:`<p>Claudeが触ってよい範囲を、最初に狭く決めることです。</p><ul><li>① 原本・機密は別の場所に分けて保管</li><li>② コピー・匿名化したデータで試す</li><li>③ 作業フォルダを限定する</li><li>④ 最後は必ず人が確認する</li></ul><p>「フォルダを限定する」だけで、かなり安全に始められます。</p>`},
+ {cat:"プロンプト", q:"うまく伝わらない。頼み方のコツは？", a:`<p>合言葉は <strong>「だ・ぜ・ど・け」</strong>。仕事の依頼書を書くイメージです。</p><ul><li><strong>だ</strong>＝誰として（役割）：「経理担当として」</li><li><strong>ぜ</strong>＝前提：「月次決算の資料で」</li><li><strong>ど</strong>＝どうしてほしい（依頼）：「チェック項目を挙げて」</li><li><strong>け</strong>＝形式：「箇条書きで5つ」</li></ul><p>全部入れなくてもOKですが、<strong>「依頼」と「形式」はできるだけ入れる</strong>と精度が上がります。</p>`},
+ {cat:"プロンプト", q:"もっと精度を上げる細かいコツは？", a:`<ul><li>① <strong>数字を入れる</strong>：「短く」ではなく「200字で」</li><li>② <strong>お手本を見せる</strong>：「この形式で」と例を貼る</li><li>③ <strong>役割を与える</strong>：「初心者に教える講師として」</li><li>④ <strong>段階に分ける</strong>：調査→整理→作成の順に頼む</li><li>⑤ <strong>保存する</strong>：良いプロンプトはチームの資産になる</li></ul>`},
+ {cat:"プロンプト", q:"1回で完璧な答えが出ない…", a:`<p>「1回で完璧」を狙わないのがコツです。出力を見て、足りないものを継ぎ足していきます。</p><ul><li>「冒頭に3行のサマリーをつけて」</li><li>「前月比・前年同月比を計算して並べて」</li><li>「下位項目について、改善のアイデアを3つ」</li><li>「他に足したほうがいい項目はある？」（Claude自身に補強提案させる）</li></ul>`},
+ {cat:"プロンプト", q:"曖昧な指示と具体的な指示でどれくらい変わる？", a:`<div class="prompt"><span class="label">Before（曖昧）</span>売上まとめて
+→ ぼんやりした集計。何を出されたか自分でも分からない。</div><div class="prompt"><span class="label">After（具体的）</span>A列日付・B列店舗・C列金額の表から、店舗別の月合計を表で。多い順に。考察も加えて。
+→ 一発で使える集計表。そのまま報告に転用可能。</div>`},
+ {cat:"MD", q:"MD（マークダウン）って何？なぜ使うの？", a:`<p>MDは「見やすいメモの書き方」。人にもAIにも読みやすく、<strong>あとでSkillにするための材料</strong>になります。</p><ul><li>見出し・箇条書きで構造が崩れにくい</li><li>手順書・チェックリスト・プロンプト保存に向く</li><li>そのままSkillsの材料になる</li></ul>`},
+ {cat:"MD", q:"MDの書き方はどれだけ覚えればいい？", a:`<p>最初はこれだけで十分です。</p><div class="prompt"># 大見出し
+## 中見出し
+- 箇条書き
+- これも箇条書き
+1. 番号付き
+2. 2番目
+**太字**</div><p>メールやメモと似ているので、すぐ慣れます。まずは見出し（#）と箇条書き（-）だけでOK。</p>`},
+ {cat:"MD", q:"自分の業務をMDに書き出すテンプレートは？", a:`<div class="prompt"># 目的
+- 何のための作業か
+# 入力するもの
+- 必要なデータ・ファイル
+# 手順
+1.
+2.
+3.
+# 確認ポイント
+-
+# 完了条件
+-</div><p>作業が大きすぎる場合は、まず1つの小さなパートだけ書き出してください。</p>`},
+ {cat:"Skills", q:"Skill（スキル）って何？プロンプトと何が違う？", a:`<p>Skillは、<strong>よく使う依頼を一度作って、短い名前で呼び出せる仕組み</strong>です。正体はMDで書いた「再利用できる指示書」。</p><ul><li>毎回プロンプト：依頼文を毎回長く書く／人によってばらつく</li><li>Skill：一度作れば <code>/請求書チェック</code> のように一言で呼び出せる／同じ品質で出せる／チームで共有できる</li></ul><p>繰り返す業務はSkill化が効きます。</p>`},
+ {cat:"Skills", q:"Skillの作り方は？", a:`<p>先に作ったMDを、そのままSkillに昇格させるのが簡単です。</p><div class="prompt"><span class="label">サンプルプロンプト</span>「請求書チェック」というSkillを作ってください。
+請求書データを渡したら、宛名・金額・振込先・日付・承認者を確認し、
+不備があれば一覧で出す内容にしてください。</div><p>作成後は、短い呼び出し名で動くか必ずテストします。</p>`},
+ {cat:"Skills", q:"Skillを作るとき何を決めればいい？", a:`<ul><li><strong>名前</strong>：短く、何の作業か分かる名前</li><li><strong>目的</strong>：何を楽にしたいか</li><li><strong>入力</strong>：Claudeに渡す情報</li><li><strong>出力</strong>：どんな形で返してほしいか</li><li><strong>確認</strong>：最後に何をチェックするか</li></ul><p>名前と出力形式を決めるだけでも、使いやすさが大きく変わります。</p>`},
+ {cat:"トラブル", q:"作ったSkillが /で呼び出せない！", a:`<p>つまずきやすい原因はだいたいこの4つ。<strong>「場所・構造・名前・再起動」</strong>を順にチェックします。</p><ul><li>① <strong>保存場所が違う</strong>：Desktopや作業フォルダではなく <code>~/.claude/skills/</code> に置く</li><li>② <strong>フォルダ構造が違う</strong>：<code>skill-name/SKILL.md</code> の形にする（MDファイル単体ではダメ）</li><li>③ <strong>日本語名・空白入り</strong>：Macでは動いてもWindowsで詰まりやすい。英小文字＋ハイフン推奨</li><li>④ <strong>再起動していない</strong>：Skillを置いた後はClaude Codeを一度閉じて開き直す</li></ul>`},
+ {cat:"トラブル", q:"Skillの正しい保存場所と構造は？", a:`<ul><li>Mac：<code>~/.claude/skills/</code></li><li>Windows：<code>%USERPROFILE%\\.claude\\skills\\</code></li></ul><p><strong>正しい形</strong>：skills フォルダの中に skill-name フォルダを作り、その直下に SKILL.md を置く。</p><div class="prompt">例：
+~/.claude/skills/invoice-check/SKILL.md</div>`},
+ {cat:"トラブル", q:"Skillの名前のつけ方は？（Mac/Windows両対応）", a:`<p>チームで使うSkillは、Mac・Windows両方で動く名前にします。</p><ul><li>✅ <strong>最推奨</strong>：英小文字＋ハイフン（kebab-case）→ <code>invoice-check</code> / <code>meeting-memo</code></li><li>△ 可：アンダースコア <code>invoice_check</code>、キャメル <code>invoiceCheck</code></li><li>⚠️ 個人用なら可：日本語名（Windowsで詰まりやすい）</li><li>🚫 非推奨：空白入りの名前（不安定）</li></ul>`},
+ {cat:"トラブル", q:"Skillを呼び出すまでの手順をおさらいしたい", a:`<ul><li>① ClaudeにSkill化を依頼（名前は英小文字）</li><li>② <code>~/.claude/skills/&lt;name&gt;/</code> を確認</li><li>③ SKILL.md が直下にあるか確認</li><li>④ Claude Codeを一度再起動</li><li>⑤ 入力欄で <code>/&lt;name&gt;</code> と入力（半角スラッシュ）</li><li>⑥ サジェストに出たら Tab で確定</li></ul>`},
+ {cat:"トラブル", q:"エラーが出た。どうすればいい？", a:`<p>エラーは怖がらず、<strong>そのままコピーして貼る</strong>のが正解です。</p><ul><li>① エラーメッセージをコピー</li><li>② 「このエラーが出た」と貼る</li><li>③ Claudeが原因と修正版を返す</li><li>④ 実行前にバックアップを取る</li></ul><p>#N/A や赤い波線も、貼れば原因が分かります。</p>`},
+ {cat:"トラブル", q:"HTMLファイルが開けない・表示が崩れる", a:`<p>作ったHTML（LP・チラシ等）はファイルを<strong>ダブルクリック</strong>するとブラウザで開きます。崩れる時は次を試します。</p><ul><li>別のブラウザ（Chrome等）で開き直す</li><li>「スマホ幅でも崩れないように直して」と頼む</li><li>「表示が崩れる」とそのまま伝えれば原因を直してくれる</li></ul>`},
+ {cat:"Excel", q:"関数を覚えていない。どう頼めばいい？", a:`<p>関数名は覚えなくてOK。<strong>「場所」と「やりたいこと」</strong>を伝えれば、Claudeが式を返してくれます。</p><div class="prompt"><span class="label">サンプルプロンプト</span>A列に日付、B列に店舗、C列に商品、D列に売上が
+2行目から500行目まであります。
+『渋谷店の今月の売上合計』を出す関数を、シートに貼れる形で教えて。</div><p>返ってきた式は、まず少件数でテスト→OKなら全体に展開、が安全な順番です。</p>`},
+ {cat:"Excel", q:"スプレッドシートで頼むときのコツは？", a:`<ul><li>① <strong>データの「場所」を伝える</strong>：A列＝日付、2行目から500行目、シート名は『売上』</li><li>② <strong>やりたいことを具体的に</strong>：「渋谷店の4月の合計」「上位5商品」など</li><li>③ <strong>エラーはそのまま貼る</strong>：#N/Aや赤い波線もコピペで原因が分かる</li></ul>`},
+ {cat:"Excel", q:"マクロ／GASって難しそう…", a:`<p>マクロ／GASは「パソコン操作の録画・再生」。毎月の手作業をボタン1つにまとめる仕組みです。<strong>コードは読まなくてOK</strong>。</p><div class="prompt"><span class="label">サンプルプロンプト</span>売上シートを月末にバックアップするマクロを作って。
+保存ファイル名は『売上_YYYYMMDD.xlsx』。今日の日付を付けて、同じフォルダに保存。
+Excelの.xlsmで動く想定で、コードと貼る場所も教えて。</div><ul><li>Sheets＝GAS（Google Apps Script）／ Excel＝マクロ(VBA)</li><li>3〜5分でできる作業を最初の題材に。動いたら勝ち。</li></ul>`},
+ {cat:"応用", q:"使用量（コスト）を節約するには？", a:`<p>「相談」と「実行」を分けるのが基本です。</p><ul><li><strong>軽い相談・壁打ち</strong>：無料枠のChatGPT/Geminiなどでアイデア出し</li><li><strong>実務の実行</strong>：Claude Codeでファイル操作・集計・作成</li><li><strong>繰り返し作業</strong>：プロンプト/Skill化して毎回の工数を減らす</li></ul>`},
+ {cat:"応用", q:"Claudeのモデル（Haiku/Sonnet/Opus）の使い分けは？", a:`<ul><li><strong>Haiku</strong>：高速・軽い処理。FAQ Bot・量処理向き。</li><li><strong>Sonnet</strong>：バランス型。通常業務向き。</li><li><strong>Opus</strong>：深い推論・複雑な判断。分析・難判断向き。</li></ul><p>1日の作業を全部Opusでやる必要はありません。使い分けるとコストも下がります。</p>`},
+ {cat:"応用", q:"会社の前提（ルール）を毎回説明したくない", a:`<p>メモリー機能に覚えさせれば、毎回同じ前提を説明せずに済みます。</p><div class="prompt"><span class="label">サンプルプロンプト</span>次のことを覚えておいてください。
+・当社では金額は税込で扱う
+・資料は初心者にも分かる言葉で書く
+・社外秘データは匿名化してから使う</div>`},
+ {cat:"著作権", q:"画像や文章の著作権・肖像権で気をつけることは？", a:`<p>クリエイティブを内製するほど、権利意識はプロ並みに。<strong>ここだけはAIに任せず人間がチェック</strong>します。</p><ul><li>お客様が写る写真は必ず書面で許可を取る</li><li>他社の画像・文章をそのまま使わない（参考はエッセンスだけ）</li><li>フリー素材は商用利用可を確認</li><li>リールBGMはアプリ内の公式音源を使う</li><li>「汚れが完全に落ちる」等の断定表現に注意（景品表示法）</li></ul>`},
+ {cat:"基本", q:"Claudeにファイル（Excelやデータ）を渡すには？", a:`<p><strong>作業フォルダに置いて「このフォルダを見て」と伝えるだけ</strong>です。1枚ずつコピペする必要はありません。</p><ul><li>複数ファイルもフォルダごと読んで中身を理解してくれる</li><li>「フォルダごと渡せる」のがChat（毎回コピペ）との大きな違い</li><li>どのファイルを使うか迷う時は「◯◯だけを読み込んで」と指定する</li></ul>`},
+ {cat:"基本", q:"画像やスクリーンショットも読めるの？", a:`<p>はい、<strong>画像も読めます</strong>。活用の幅が広がります。</p><ul><li>他社LPやチラシのスクショ →「良い点を5つ分析して」</li><li>領収書・レシートの写真 → 金額・店名・日付を抽出（OCR）</li><li>手書きメモの写真 → テキスト化</li><li>人気投稿のスクショ →「勝ちパターンを分析して」</li></ul>`},
+ {cat:"基本", q:"スマホでも使える？PCと何が違う？", a:`<p>用途を分けるのがコツです。</p><ul><li><strong>スマホ</strong>：移動中の相談・メール下書き・アイデア整理</li><li><strong>PC</strong>：ファイル操作・集計・成果物づくりなど重い作業</li></ul><p>「軽い相談はスマホ、しっかり作業はPC」と覚えておけばOK。</p>`},
+ {cat:"基本", q:"何を作らせればいいか分からない…", a:`<p>大事なのは<strong>「AIに何を作らせるか」を業務の言葉で言える</strong>こと。難しく考えず、毎回ちょっと面倒な作業が入口です。</p><ul><li>確認・集計・メール・議事録・資料のたたき台</li><li>月次のチェックリスト作り／請求書PDFから確認項目を抜き出す</li><li>会議メモから担当者別ToDoを作る</li></ul><p>最初から完璧なツールは不要。小さく作って、使いながら育てます。</p>`},
+ {cat:"Skills", q:"作ったSkillをチームで共有するには？", a:`<p>個人の便利を、部署の標準ツールに育てられます。</p><ul><li>Team Standard プランで Skill をチーム共有できる</li><li>命名規則を揃える（カテゴリ_用途／英小文字＋ハイフン）</li><li>使い方を1ページのマニュアルにする</li><li>更新ログ（誰がいつ何を変えたか）を残す</li><li>編集権限は限定的に</li></ul>`},
+ {cat:"応用", q:"無料のChatGPT/Geminiと組み合わせて使うには？", a:`<p>原則は <strong>「相談は無料LLM、実行はClaude」</strong>。</p><ul><li>① ChatGPT/Geminiで「この業務をAIに頼むなら、どんな手順に分ける？」と<strong>壁打ち</strong></li><li>② まとまった手順を Claude Code に渡して、実ファイルを作らせる</li></ul><p>スピードも使用量も改善しやすくなります。</p>`},
+ {cat:"応用", q:"MCPって何？何ができるの？", a:`<p>MCP（Model Context Protocol）は、Claudeを<strong>外部サービスと直接つなぐ標準規格</strong>。「Claude用のUSBポート」のイメージで、繋げばコピペなしでデータを読み書きできます。</p><ul><li>Googleカレンダー → 締日・支払日のリマインド</li><li>Slack → 申請の通知・承認依頼</li><li>freee → 仕訳登録・帳票確認</li><li>ブラウザ → Web画面の自動操作</li></ul><p>設定は <code>claude mcp add</code> または <code>/mcp</code> コマンドで管理。<strong>権限は最小化</strong>し、接続先は情シスと事前調整を。</p>`},
+ {cat:"応用", q:"エージェント（Agent）とSkillの違いは？", a:`<ul><li><strong>Skill</strong>＝プロンプトのテンプレート（指示書）</li><li><strong>Agent</strong>＝<strong>自律的に判断・実行する専門家</strong>。役割を定義し、使えるツールも制限できる</li></ul><p>作り方は <code>~/.claude/agents/</code> に Markdown ファイルを置くだけ。<code>/agents</code> で一覧表示できます。「何でも屋」より「専門家（仕訳Agent・突合Agentなど）」の方が精度が上がります。</p>`},
+ {cat:"応用", q:"複数のエージェントで分業させたい（エージェントグループ）", a:`<p>1つのAgentに全部やらせると精度が落ちるため、人間のチームのように分業させます。</p><ul><li>① メインAgentが全体を統括</li><li>② サブAgentに作業を振り分け</li><li>③ 各Agentが並列で実行（高速）</li><li>④ 結果をメインAgentが統合</li></ul><p>例：月次決算を「収集→突合→分析→レビュー」の4Agentで。独立した調査は <code>parallel</code>、順番に流す処理は <code>pipeline</code> を使います。</p>`},
+ {cat:"応用", q:"毎朝決まった時間に自動で動かしたい（ルーチン /schedule）", a:`<p><code>/schedule</code> で<strong>定期実行（ルーチン）</strong>を設定できます。cronのように決まった時間に自動で動きます。</p><ul><li>毎朝7時 → 売上サマリーを生成してSlackに投稿</li><li>毎週月曜 → 週次レポートを自動作成</li><li>毎月25日 → 決算チェックリストを実行</li></ul><p><strong>クラウド上で実行</strong>されるので、PCが閉じていてもOK。出社前に「今日やるべきこと」が準備された状態を作れます。</p>`},
+ {cat:"応用", q:"ルーチン（/schedule）とループ（/loop）の違いは？", a:`<table style="width:100%;border-collapse:collapse;font-size:13.5px"><tr style="border-bottom:1px solid #e6e8ec"><td style="padding:5px"></td><td style="padding:5px"><strong>ルーチン /schedule</strong></td><td style="padding:5px"><strong>ループ /loop</strong></td></tr><tr style="border-bottom:1px solid #f0f1f4"><td style="padding:5px">タイミング</td><td style="padding:5px">決まった時間</td><td style="padding:5px">今すぐ＋繰り返し</td></tr><tr style="border-bottom:1px solid #f0f1f4"><td style="padding:5px">実行場所</td><td style="padding:5px">クラウド(PCオフ可)</td><td style="padding:5px">今のセッション内</td></tr><tr style="border-bottom:1px solid #f0f1f4"><td style="padding:5px">間隔</td><td style="padding:5px">毎日/毎週/毎月</td><td style="padding:5px">数分〜数十分</td></tr><tr><td style="padding:5px">用途</td><td style="padding:5px">定期レポート</td><td style="padding:5px">状態監視・ポーリング</td></tr></table><p style="margin-top:8px">定時タスクはルーチン、リアルタイム監視はループ。使い方は <code>/loop 5m コマンド名</code> のように間隔を指定します。</p>`},
+ {cat:"便利コマンド", q:"覚えておくと便利な / コマンドは？", a:`<ul><li><code>/help</code> ヘルプ ／ <code>/clear</code> 会話クリア ／ <code>/compact</code> 会話を圧縮</li><li><code>/cost</code> 使用量確認 ／ <code>/model</code> モデル切替 ／ <code>/fast</code> 高速モード</li><li><code>/undo</code> 変更を元に戻す ／ <code>/review</code> コードレビュー ／ <code>/init</code> CLAUDE.md生成</li><li><code>/mcp</code> 外部連携の管理 ／ <code>/agents</code> エージェント一覧</li><li><code>/schedule</code> 定期実行 ／ <code>/loop</code> 繰り返し実行</li></ul>`},
+ {cat:"便利コマンド", q:"知っておくと速くなるショートカットは？", a:`<ul><li><strong>Esc</strong>：Claudeの応答を途中で止める</li><li><strong>Shift + Tab</strong>：プラン承認モードのON/OFF</li><li><strong>Option + T</strong>：拡張思考（深く考える）のON/OFF</li><li><strong>#</strong> で始める：Claudeに指示せず自分用メモ</li><li><strong>@ファイル名</strong>：そのファイルを直接参照して質問</li><li><strong>画像をドラッグ&ドロップ</strong>：スクショを貼って質問</li></ul>`},
+];
+
+/* ================= 活用方法（プロンプト集）データ ================= */
+const USE = [
+ {cat:"LP・Web", title:"初回割引キャンペーンLPを作る", desc:"言葉だけで、デザイン込みのWebページ（HTML 1ファイル）が完成。外注なら数万円のものが約3分。",
+  points:["ヒーロー→共感→ベネフィット→お客様の声→料金→CTA の6ブロック構成","色・フォント・余白・ボタン・スマホ対応まで自動"],
+  prompts:[{label:"プロンプト",text:`コインランドリー「fuwari」の初回割引キャンペーンLPを HTML 1ファイルで作って。
+・構成：ヒーロー→共感→ベネフィット3つ→お客様の声→料金→来店CTA
+・対象：共働き・子育て世帯。清潔感と安心感。水色×白
+・初回利用半額。スマホで見やすく。`}]},
+ {cat:"LP・Web", title:"競合のLPを“先生”にして取り入れる", desc:"参考LPのスクショを渡すと、良い点を言語化→自分のLPに合う形で提案してくれる（丸パクリはNG、エッセンスだけ）。",
+  prompts:[{label:"プロンプト",text:`このスクリーンショットは他社コインランドリーのLPです。
+構成・コピー・配色の良い点を5つ分析して。
+そのエッセンスを、うちのLPに合う形で提案して。`}]},
+ {cat:"LP・Web", title:"プロっぽく仕上げる5点セット", desc:"この5つを足すだけで“それっぽさ”が一気に上がる。1つずつ追加で依頼する。",
+  points:["利用者数をファーストビューに入れる（信頼の数字）","よくある質問を5つ追加（不安の先回り）","アクセス情報と地図枠を追加","利用の流れを3ステップ図解で","読み込みアニメは外す（シンプルが正義）"],
+  prompts:[{label:"プロンプト例",text:`このLPに次を追加して。
+①ファーストビューに利用者数の表示
+②よくある質問を5つ
+③アクセス情報と地図の枠
+④利用の流れを3ステップの図解で`}]},
+ {cat:"LP・Web", title:"QRコード＆来店導線をつなぐ", desc:"紙→Web→登録の一本道を作る。フライヤーのQR→LP→LINE登録。",
+  prompts:[{label:"プロンプト",text:`①このLPのURLのQRコードを画像で作って
+②LPの申込ボタンの飛び先を、LINE公式アカウントのURLに変えて
+③「QRから来た人限定特典」の一文をCTA上に追加して`}]},
+ {cat:"LP・Web", title:"2本目以降を爆速で作る時短ワザ", desc:"型ができれば中身を差し替えるだけ。Skill化すれば毎回3分。",
+  points:["「過去のLPと同じ構成で中身だけ変えて」","「A/B用に見出し違いを2版作って」","「このWordのチラシ文面をLP化して」","「画像なし版も作って」（メール掲載用）","LPの型をSkill化 → /lp-create"]},
+
+ {cat:"チラシ・POP", title:"オープン記念フライヤー（A5・印刷用PDF）", desc:"印刷物もAIで。3秒ルール・情報は7割・QRが主役。完成後そのままPDF変換。",
+  prompts:[{label:"プロンプト",text:`コインランドリーのオープン記念フライヤー（A5縦・印刷用）をHTMLで作って。
+・表面：キャッチコピー＋営業時間＋初回半額＋QRコード枠
+・雰囲気：清潔感と温かみ。水色×白
+・印刷を想定して文字は大きめ、余白たっぷり
+・完成後、PDFに変換して。`}]},
+ {cat:"チラシ・POP", title:"店内POP・掲示物3点セット", desc:"無人店舗は掲示が命。迷わせない・困らせない掲示が来店体験を決める。",
+  prompts:[{label:"プロンプト",text:`①使い方ガイドを作って：洗濯機の使い方4ステップ＋洗剤自動投入の説明
+②料金表・営業時間・利用マナーの注意書きPOPも
+③トラブル時の連絡先カード（QR＋電話番号）も`}]},
+ {cat:"チラシ・POP", title:"印刷で失敗しないチェック5点", desc:"画面と紙は違う。印刷前にこれを確認。",
+  points:["文字サイズ：本文12pt以上、キャッチ24pt以上","余白：紙の端から5mm以上（断ち切れ防止）","色：画面より暗く出る。明るめ指定が安全","QRコード：2cm角以上＋実機で読み取りテスト","誤字：「誤字脱字をチェックして」とAIにも確認"]},
+
+ {cat:"SNS投稿", title:"Instagram お役立ち投稿（画像＋文＋タグ）", desc:"カルーセル画像・キャプション・ハッシュタグまでセットで生成。コピペで投稿できる状態に。",
+  points:["勝ちパターンの比率は お役立ち6：日常2：告知2"],
+  prompts:[{label:"プロンプト",text:`Instagram投稿を作って。テーマ「生乾き臭を防ぐ3つの洗濯のコツ」
+①正方形の画像（1080px）：表紙＋3枚のカルーセル。文字入り、ブランドカラーで
+②キャプション：200字、親しみやすく、最後に来店誘導をさりげなく
+③ハッシュタグ：30個（大・中・小規模を混ぜて）`}]},
+ {cat:"SNS投稿", title:"ネタ切れ防止：投稿テーマを30個出す", desc:"月初に30個出させて◎を優先採用。「ネタを考える時間」がゼロになる。",
+  prompts:[{label:"プロンプト",text:`コインランドリーのInstagram投稿テーマを30個出して。
+・お役立ち／日常／告知の割合は6:2:2
+・季節（来月）の話題を絡めて
+・各テーマに「保存されやすさ」の予想を◎○△で`}]},
+ {cat:"SNS投稿", title:"人気投稿を“分析→再生産”する", desc:"「なんとなく伸びた」を「再現できる勝ち筋」に変える。スクショを渡して分析させる。",
+  prompts:[{label:"プロンプト",text:`この3つは過去に保存数が多かった投稿です（スクショ添付）。
+共通する勝ちパターンを分析して。
+そのパターンで新しい投稿テーマを10個提案して。`}]},
+ {cat:"SNS投稿", title:"SNS運用の周辺業務もぜんぶ頼む", desc:"投稿そのもの以外の雑務も任せられる。",
+  points:["「この文を140字に」→ X用に圧縮","「タグを大中小で30個」→ リーチ設計","「ストーリーズ用に縦長版(1080×1920)も」","「炎上リスクをチェックして」","「DMの定型返信集を作って」","「キャンペーン規約のたたき台」"]},
+
+ {cat:"動画・計画", title:"15秒リールの台本を作る", desc:"フック→本編→CTAの構成で、各カットの映像指示・テロップ・BGMまで表で。",
+  prompts:[{label:"プロンプト",text:`15秒リールの台本を作って。テーマ「布団、いつ洗った？チェック」
+・構成：フック（2秒）→チェック方法（8秒）→改善ヒント（3秒）→CTA（2秒）
+・各カットの「映像の指示」と「テロップ文言」を表で
+・BGMの雰囲気も提案して`}]},
+ {cat:"動画・計画", title:"月間コンテンツカレンダーを一気に組む", desc:"1ヶ月分の投稿計画をExcelで出力。担当欄つきでチーム分担まで。",
+  prompts:[{label:"プロンプト",text:`来月のInstagram投稿カレンダーを作って。
+・週3投稿（月・水・土）
+・比率：お役立ち6：日常2：告知2
+・各投稿のテーマ・形式（フィード/リール）・狙いを表で
+・Excelで出力して`}]},
+
+ {cat:"ブランド統一", title:"ブランドキットを作ってSkill化→全制作物に適用", desc:"色・フォント・余白を1度決めてキット化すれば、LP・チラシ・SNSが同じ顔になる。",
+  prompts:[{label:"プロンプト（順に実行）",text:`①「うちのブランドキットをMDで作って。配色・フォント・トーン・ロゴ位置」
+②「このキットをSkill（brand-kit）として保存して」
+③「さっきのLPを brand-kit のトーンで作り直して」
+④「フライヤーとSNS画像にも同じキットを適用して」`}]},
+ {cat:"ブランド統一", title:"投稿の“型”をSkill化（insta-post）", desc:"毎回の投稿作成が30分→3分に。トーンも統一される。",
+  prompts:[{label:"プロンプト",text:`「insta-post」というSkillを作って。
+テーマを渡したら、カルーセル画像4枚＋キャプション200字＋
+ハッシュタグ30個をブランドトーンで出力する内容で。`}]},
+ {cat:"ブランド統一", title:"デザインは“雰囲気の言葉”で指定できる", desc:"色名やフォント名を知らなくても「対象＋雰囲気」で通じる。",
+  points:["上品・洗練 → 「ミニマル、余白多め、白×グレージュ」","温かい・親しみ → 「やわらかい、丸み、アイボリー×テラコッタ」","元気・活発 → 「ポップ、ビビッド、白×コーラル」","高級・特別感 → 「ラグジュアリー、黒×ゴールド、明朝系」","例：「30代女性向けの上品で温かい雰囲気」"]},
+
+ {cat:"集計・自動化", title:"月次レポートを1プロンプトで完成形に", desc:"毎月のExcel集計を一括化。Skill化すれば呼び出し1回で完了。",
+  prompts:[{label:"プロンプト",text:`売上データから、月次レポートを作って。
+①店舗別合計 ②前月比 ③上位3商品 ④コメント欄。シートを分けて出して。
+見出しは太字、金額は3桁カンマ、マイナスは赤で。`}]},
+ {cat:"集計・自動化", title:"2つの表の数値突合（照合）", desc:"目視2時間が数十秒に。しかも見落としゼロ。表記ゆれも揃えさせると精度UP。",
+  prompts:[{label:"プロンプト",text:`シート『請求』と『入金』に、取引先と金額があります。
+両方を照合して、金額が一致しないものだけを一覧にして。
+状態（入金なし／一部入金／過入金）と差額を付けて、新しいシートに出して。`}]},
+ {cat:"集計・自動化", title:"フォルダ内の大量ファイルを一括処理", desc:"「フォルダごと渡す」のがClaude Codeの真骨頂。年度末・月末の一斉処理に絶大。",
+  prompts:[{label:"プロンプト",text:`フォルダ『請求書_2026年5月』にある50個のPDFを全部読んで、
+金額・宛名・支払期日・摘要を1つのExcelにまとめて。
+ファイル名も列に残し、合計金額も最終行に。`}]},
+ {cat:"集計・自動化", title:"ピボットテーブルを“言葉”で作る", desc:"クロス集計が苦手な人ほど効果的。設定方法と操作手順も教えてくれる。",
+  prompts:[{label:"プロンプト",text:`売上データから、行=店舗 列=月 値=売上合計 のピボットテーブルを作って。
+ピボットの設定方法と、Excelの操作手順も教えて。`}]},
+
+ {cat:"ツール・Bot", title:"議事録ツールを作る", desc:"会議メモを渡すと、決定事項・次アクション（担当・期日）まで整理。MD＋Excel両方で。",
+  prompts:[{label:"プロンプト",text:`『議事録ツール』を作って。
+入力：会議メモ（テキスト）／参加者リスト
+出力：日時・参加者・議題・決定事項・次アクション（担当・期日）
+形式はマークダウンとExcelの両方で。`}]},
+ {cat:"ツール・Bot", title:"社内の質問に答えるBot（就業規則など）", desc:"規程やマニュアルを読ませれば社内ヘルプデスクが完成。根拠条文つきで回答。",
+  prompts:[{label:"プロンプト",text:`就業規則.pdfを読み込んで、社員からの質問に答えるBotを作って。
+回答は『◯条◯項』の根拠付きで。
+質問に該当条文がないときは『規程に明記なし。人事に確認を』と返す。`}]},
+ {cat:"ツール・Bot", title:"毎朝見る集計ダッシュボード", desc:"毎朝開くだけで「今日やるべきこと」が見える1枚。",
+  prompts:[{label:"プロンプト",text:`売上データ／経費データ／勤怠データ／タスクリストを統合して、
+『朝の確認ダッシュボード』を作って。
+4ブロック構成、上から順に売上・経費・人員・タスク。
+要注意項目はトップに集約、数字は3桁カンマ。`}]},
+ {cat:"集計・自動化", title:"決済の生データ→店舗別の収支明細", desc:"1行1取引の生データを、店舗ごとにまとめ直す。列の意味と「まとめる単位」を伝えるのがコツ。",
+  prompts:[{label:"プロンプト",text:`次のファイルだけを読み込んでください。
+「決済売上_生データ.xlsx」
+店舗ごとに、売上合計・手数料合計・差引入金額・取引件数を集計してください。
+差引入金額は「売上合計 − 手数料合計」で計算してください。
+結果を「店舗別収支明細.xlsx」として保存してください。`}]},
+ {cat:"集計・自動化", title:"複数の成果物を1つの経営資料に統合", desc:"バラバラに作ったExcelを、シートを分けて1ファイルにまとめる。読み込むファイルを限定するのが安全。",
+  prompts:[{label:"プロンプト",text:`次の3ファイルだけを読み込んでください。
+「店舗別収支明細.xlsx」「年間売上シート.xlsx」「キャッシュフロー表.xlsx」
+元データや他のExcelは読み込まないでください。
+3つの内容を1つのExcelにまとめ、シート名を内容ごとに分けてください。
+「経営資料まとめ.xlsx」として保存し、売上・手数料・残高を検算してください。`}]},
+ {cat:"ツール・Bot", title:"領収書・レシートの読み取りツール（OCR）", desc:"紙やPDFの伝票を写真・スキャンから一覧化。紙がデジタル化されれば、あらゆる自動化が動き出す。",
+  prompts:[{label:"プロンプト",text:`フォルダ内の領収書の画像・PDFを全部読んで、
+日付・金額・店名・摘要を1つのExcelにまとめて。
+ファイル名も列に残し、合計金額を最終行に。
+読み取れなかったものは「要確認」と印をつけて。`}]},
+ {cat:"ツール・Bot", title:"提案書ツール（骨子づくり）", desc:"相手企業・テーマ・課題を渡すと、章立てと各章の要点を返す。PPTにそのまま貼れる。",
+  prompts:[{label:"プロンプト",text:`『提案書ツール』を作って。
+入力：相手企業・提案テーマ・課題
+出力：表紙→現状→提案→効果→価格→次のステップ
+PPTのタイトル案と各章の3行要点を返して。`}]},
+ {cat:"営業", title:"顧客リストに一括パーソナライズメール", desc:"一斉送信なのに「自分宛に見える」。各社の直近ニュースに触れた冒頭で返信率が大きく変わる。",
+  prompts:[{label:"プロンプト",text:`顧客リスト30社に、それぞれの直近ニュースに
+触れたパーソナライズ初回メールを作って。
+共通テンプレ＋会社別の冒頭1文を変える形で。`}]},
+ {cat:"営業", title:"提案書のデザイン・グラフを自動生成", desc:"見た目を上げると決裁率が変わる。数字を渡すだけで最適なグラフ・レイアウトに。",
+  points:["表紙を会社カラーで自動レイアウト","数字を渡せば最適なグラフを生成","章ごとのアイコンを提案","全体の色・フォントを統一"]},
+ {cat:"営業", title:"商談前の企業リサーチ（ニュース・IR・競合）", desc:"商談に使える切り口まで提案させる。リサーチ専門のエージェント化も可能。",
+  prompts:[{label:"プロンプト",text:`次の企業について、商談前のリサーチをして。
+①直近のニュース・IR情報
+②業界動向と競合比較
+③商談で使える切り口を3つ
+出典のURLも添えて。`}]},
+ {cat:"自動化・連携", title:"毎朝のサマリーを定期実行（/schedule）", desc:"出社前に「今日やること」が準備済みの状態に。クラウド実行なのでPCを閉じていてもOK。",
+  prompts:[{label:"/schedule の設定例",text:`/schedule
+  名前: 朝の経費チェック
+  頻度: 毎日 7:00
+  内容: 経費管理シートを読んで、未処理の領収書と
+        支払期限が近い請求書を一覧化して。`}]},
+ {cat:"自動化・連携", title:"専門エージェントを作る（経費チェック等）", desc:"特定業務に特化させると精度が劇的に上がる。~/.claude/agents/ にMDを置くだけ。",
+  prompts:[{label:"プロンプト",text:`「経費チェック」専門のエージェントを作って。
+役割：領収書画像から金額・日付・店名を読み取り、
+勘定科目を自動判定し、二重計上がないかチェックする。
+使うツールは読み取り・書き込み・集計に限定して。`}]},
+ {cat:"自動化・連携", title:"MCPで外部サービスとつなぐ", desc:"コピペ作業をゼロに。Claudeが直接データを読み書きする。権限は最小化で。",
+  points:["freee → 仕訳登録・帳票確認","Googleカレンダー → 締日・支払日のリマインド","Slack → 経費申請の通知・承認依頼","Googleスプレッドシート → 予実管理表の自動更新","設定は claude mcp add または /mcp で管理"]},
+];
+
+/* ================= Q&A 描画 ================= */
+const list=document.getElementById('list'),cats=document.getElementById('cats'),search=document.getElementById('search'),count=document.getElementById('count'),noresult=document.getElementById('noresult');
+const ALL="すべて";let activeCat=ALL;
+const categories=[ALL,...[...new Set(DATA.map(d=>d.cat))]];
+categories.forEach(c=>{const b=document.createElement('button');b.className='cat'+(c===ALL?' active':'');b.textContent=c;b.onclick=()=>{activeCat=c;[...cats.children].forEach(x=>x.classList.toggle('active',x.textContent===c));renderQA();};cats.appendChild(b);});
+function renderQA(){
+  const kw=search.value.trim().toLowerCase();list.innerHTML='';let shown=0;
+  categories.filter(c=>c!==ALL).forEach(c=>{
+    if(activeCat!==ALL&&activeCat!==c)return;
+    const items=DATA.filter(d=>d.cat===c).filter(d=>!kw||(d.q+d.a+d.cat).toLowerCase().includes(kw));
+    if(!items.length)return;
+    const h=document.createElement('div');h.className='section-title';h.textContent=c;list.appendChild(h);
+    items.forEach(d=>{shown++;const det=document.createElement('details');det.className='qa';
+      det.innerHTML=`<summary class="q"><span class="qmark">Q</span><span class="qtext">${d.q}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary><div class="a">${d.a}</div>`;
+      list.appendChild(det);});
+  });
+  noresult.style.display=shown===0?'block':'none';
+  count.textContent=(kw||activeCat!==ALL)?`${shown}件の質問を表示中`:`全${DATA.length}件の質問`;
+}
+renderQA();
+
+/* ================= 活用方法 描画 ================= */
+const list2=document.getElementById('list2'),cats2=document.getElementById('cats2'),search2=document.getElementById('search2'),count2=document.getElementById('count2'),noresult2=document.getElementById('noresult2');
+let activeCat2=ALL;
+const ucCats=[ALL,...[...new Set(USE.map(d=>d.cat))]];
+ucCats.forEach(c=>{const b=document.createElement('button');b.className='cat'+(c===ALL?' active':'');b.textContent=c;b.onclick=()=>{activeCat2=c;[...cats2.children].forEach(x=>x.classList.toggle('active',x.textContent===c));renderUse();};cats2.appendChild(b);});
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderUse(){
+  const kw=search2.value.trim().toLowerCase();list2.innerHTML='';let shown=0;
+  ucCats.filter(c=>c!==ALL).forEach(c=>{
+    if(activeCat2!==ALL&&activeCat2!==c)return;
+    const items=USE.filter(d=>d.cat===c).filter(d=>{
+      if(!kw)return true;
+      const blob=(d.title+d.desc+d.cat+(d.points||[]).join('')+(d.prompts||[]).map(p=>p.text).join('')).toLowerCase();
+      return blob.includes(kw);
+    });
+    if(!items.length)return;
+    const h=document.createElement('div');h.className='section-title';h.textContent=c;list2.appendChild(h);
+    items.forEach(d=>{shown++;
+      const card=document.createElement('div');card.className='uc';
+      let html=`<div class="uc-head"><span class="uc-cat">${d.cat}</span><h3>${d.title}</h3></div><p class="desc">${d.desc}</p><div class="uc-body">`;
+      if(d.points){html+=`<ul class="points">`+d.points.map(p=>`<li>${p}</li>`).join('')+`</ul>`;}
+      if(d.prompts){d.prompts.forEach(p=>{const t=esc(p.text);html+=`<div class="prompt"><button class="copy">コピー</button><span class="label">${p.label}</span>${t}</div>`;});}
+      html+=`</div>`;card.innerHTML=html;list2.appendChild(card);
+    });
+  });
+  noresult2.style.display=shown===0?'block':'none';
+  count2.textContent=(kw||activeCat2!==ALL)?`${shown}件の活用例を表示中`:`全${USE.length}件の活用例`;
+  // copyボタン
+  list2.querySelectorAll('.copy').forEach(btn=>{
+    btn.onclick=()=>{
+      const box=btn.closest('.prompt');
+      const text=[...box.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
+      const full=box.innerText.replace(/^コピー\s*/,'').replace(/^[A-Za-z（）぀-ヿ一-鿿・/]+\n/,'');
+      navigator.clipboard.writeText(getPromptText(box)).then(()=>{btn.textContent='コピー済み';btn.classList.add('done');setTimeout(()=>{btn.textContent='コピー';btn.classList.remove('done');},1500);});
+    };
+  });
+}
+function getPromptText(box){
+  // ラベル(.label)を除いた本文だけを取得
+  const clone=box.cloneNode(true);
+  clone.querySelectorAll('.copy,.label').forEach(e=>e.remove());
+  return clone.textContent.trim();
+}
+renderUse();
+
+/* ================= 用語集データ ================= */
+/* kind: abc=アルファベット / kana=カタカナ / kanji=日本語 */
+const GLOSSARY=[
+ // --- AI・ツール ---
+ {cat:"AI・ツール",kind:"kana",name:"Claude",read:"クロード",def:"Anthropic社のAI。文章・表・ファイル操作が得意で、日本語の実務に強い。本講座の主役。"},
+ {cat:"AI・ツール",kind:"abc",name:"Anthropic",read:"アンソロピック",def:"Claudeを開発しているAI企業。公式ドキュメントは新機能の一次情報源。"},
+ {cat:"AI・ツール",kind:"kana",name:"Claude Code",read:"クロードコード",def:"フォルダ内のファイルを読み、直し、<b>成果物として保存まで進める</b>Claude。"},
+ {cat:"AI・ツール",kind:"kana",name:"Claude Chat / Cowork",read:"チャット／コワーク",def:"Chat＝質問・相談・文章作成（入口）。Cowork＝画面を一緒に見ながらその場で相談（伴走）。"},
+ {cat:"AI・ツール",kind:"kanji",name:"壁打ち",read:"かべうち",def:"アイデアを相手にぶつけて考えを整理する相談のしかた。Claudeは壁打ち相手になれる。"},
+ {cat:"AI・ツール",kind:"kana",name:"デスクトップ操作 / スタンドアロン型",read:"",def:"PCのファイルを開く・整理する作業／「これやっておいて」と頼むとまとまった作業を自分で進める形。"},
+ {cat:"AI・ツール",kind:"abc",name:"Agent team / エージェントグループ",read:"エージェントチーム",def:"複数のAIエージェントを<b>チームとして分業</b>させる仕組み。メインAgentが統括し、サブAgentが並列で実行→結果を統合。"},
+ {cat:"AI・ツール",kind:"kana",name:"AIエージェント / Agent",read:"エージェント",def:"指示すると手順を考えながら、まとまった作業を自分で進めるAI。「分身」のイメージ。"},
+ {cat:"AI・ツール",kind:"abc",name:"LLM",read:"エルエルエム",def:"大規模言語モデル。ChatGPTやClaudeなど、文章を扱うAIの総称。"},
+ {cat:"AI・ツール",kind:"kana",name:"プロンプト",read:"",def:"AIへの<b>指示文・お願いの文章</b>。「命令」より「仕事の依頼書」と考えると分かりやすい。"},
+ {cat:"AI・ツール",kind:"kana",name:"Codex",read:"コーデックス",def:"OpenAIの開発寄りAIエージェント。コードの編集・検証を並列で進める。"},
+ {cat:"AI・ツール",kind:"kana",name:"Antigravity",read:"アンチグラビティ",def:"GoogleのGemini系エージェント型開発環境。"},
+ {cat:"AI・ツール",kind:"kana",name:"Gemini / ChatGPT",read:"ジェミニ／チャットジーピーティー",def:"GoogleとOpenAIのチャットAI。雑談・調査などの「相談」に使える。"},
+ {cat:"AI・ツール",kind:"kana",name:"Perplexity / DeepL",read:"パープレキシティ／ディープエル",def:"出典付きで調べられるAI検索／高精度の翻訳サービス。"},
+ {cat:"AI・ツール",kind:"kana",name:"Haiku / Sonnet / Opus",read:"ハイク／ソネット／オーパス",def:"Claudeの<b>モデルの種類</b>。Haiku＝高速・軽い、Sonnet＝バランス、Opus＝深い推論。用途で使い分ける。"},
+ {cat:"AI・ツール",kind:"kana",name:"モデル",read:"",def:"AIの“頭脳”の種類。性能・速度・コストが違う。全部を最高性能でやる必要はない。"},
+ {cat:"AI・ツール",kind:"abc",name:"MCP",read:"エムシーピー",def:"Claudeを会計ソフト・カレンダー・チャットなど<b>外部サービスと直接つなぐ</b>仕組み。"},
+ {cat:"AI・ツール",kind:"kana",name:"Skill / Skills",read:"スキル",def:"よく使う依頼を一度作って、<b>短い名前（/◯◯）で呼び出せる</b>仕組み。正体はMDの指示書。"},
+ {cat:"AI・ツール",kind:"kana",name:"メモリー",read:"",def:"会社や部署の前提（税込で扱う等）をClaudeに覚えさせる機能。毎回説明せずに済む。"},
+ {cat:"AI・ツール",kind:"kana",name:"インポート",read:"",def:"既存の資料・手順書をClaudeに読み込ませること。"},
+ {cat:"AI・ツール",kind:"kanji",name:"確認モード / 自動モード",read:"",def:"変更前に人が確認してから進める／任せて進める、という作業の進め方。初心者は確認モードが基本。"},
+ {cat:"AI・ツール",kind:"abc",name:"Team Standard",read:"チームスタンダード",def:"法人向けの契約プラン名。Skillのチーム共有などが使える。"},
+ {cat:"AI・ツール",kind:"kana",name:"アドイン",read:"",def:"Excel・Word・PowerPointなどに後から追加して機能を足す部品。"},
+ {cat:"AI・ツール",kind:"kanji",name:"拡張機能（Chrome拡張）",read:"かくちょうきのう",def:"ブラウザに追加機能を足す部品。Web上で要約や下書きを頼める。"},
+ {cat:"AI・ツール",kind:"kanji",name:"定期実行",read:"ていきじっこう",def:"決めた時刻に自動でClaudeを動かす機能。毎朝レポートを生成させる等。"},
+ {cat:"AI・ツール",kind:"abc",name:"MCPサーバー",read:"エムシーピーサーバー",def:"外部サービスとClaudeを仲介するプログラム。Claude→MCPサーバー→外部APIの流れでデータを取得・操作する。"},
+ {cat:"AI・ツール",kind:"kana",name:"ルーチン（/schedule）",read:"",def:"<b>決まった時間に自動でClaudeが動く</b>仕組み（毎日/毎週/毎月）。クラウドで実行されPCが閉じていてもOK。"},
+ {cat:"AI・ツール",kind:"kana",name:"ループ（/loop）",read:"",def:"同じ処理を<b>一定間隔で繰り返す</b>仕組み（数分〜数十分）。状態の監視・ポーリングに最適。今のセッション内で動く。"},
+ {cat:"AI・ツール",kind:"kanji",name:"並列実行",read:"へいれつじっこう",def:"複数のエージェントを<b>同時に走らせる</b>こと。直列より大幅に速い。独立した調査向き。"},
+ {cat:"AI・ツール",kind:"abc",name:"Workflow / pipeline / parallel",read:"ワークフロー／パイプライン／パラレル",def:"複雑な処理の流れを定義する上級者向け機能。parallel＝同時に処理して合流、pipeline＝1件ずつ全工程を流す。"},
+ {cat:"AI・ツール",kind:"kanji",name:"スラッシュコマンド（/◯◯）",read:"",def:"<code>/</code>で始まる便利な命令。<code>/help</code><code>/clear</code><code>/cost</code><code>/model</code><code>/mcp</code><code>/agents</code><code>/schedule</code><code>/loop</code>など。"},
+ {cat:"AI・ツール",kind:"abc",name:"CLAUDE.md",read:"クロードエムディー",def:"プロジェクトの前提や決まりを書いておく設定ファイル。<code>/init</code>で自動生成できる。"},
+ {cat:"AI・ツール",kind:"kanji",name:"拡張思考",read:"かくちょうしこう",def:"Claudeに<b>より深く考えさせる</b>モード。Option+TでON/OFF。難しい判断・設計のときに。"},
+ {cat:"AI・ツール",kind:"kanji",name:"プラン承認モード",read:"プランしょうにん",def:"実行前に計画を確認・承認してから進めるモード。Shift+TabでON/OFF。"},
+ {cat:"AI・ツール",kind:"kana",name:"システムプロンプト",read:"",def:"エージェントの性格・役割をあらかじめ定義しておく指示文。「あなたは経費精算の専門家です」など。"},
+
+ // --- パソコン・ファイル基礎 ---
+ {cat:"パソコン・ファイル",kind:"kana",name:"フォルダ / ディレクトリ",read:"",def:"ファイルを入れておく入れ物。「ディレクトリ」はフォルダの別の言い方。"},
+ {cat:"パソコン・ファイル",kind:"kanji",name:"作業フォルダ",read:"さぎょうフォルダ",def:"<b>Claudeが触ってよいと指定した場所</b>。範囲を狭く決めるのが安全のコツ。"},
+ {cat:"パソコン・ファイル",kind:"kana",name:"パス",read:"",def:"ファイルやフォルダの<b>住所（場所を示す文字列）</b>。例：~/.claude/skills/"},
+ {cat:"パソコン・ファイル",kind:"kana",name:"~（チルダ）",read:"",def:"Macで自分のユーザーフォルダを表す記号。~/.claude は「自分のフォルダの中の.claude」の意味。"},
+ {cat:"パソコン・ファイル",kind:"kanji",name:"拡張子",read:"かくちょうし",def:"ファイル名の末尾（.xlsx .pdf .html など）。ファイルの<b>種類</b>を表す。"},
+ {cat:"パソコン・ファイル",kind:"kana",name:".md / マークダウン",read:"",def:"見やすいメモの書き方。<code>#</code>で見出し、<code>-</code>で箇条書き。AIにも読みやすく、Skillの材料になる。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"README",read:"リードミー",def:"フォルダの中身や使い方を説明するファイル。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"HTML",read:"エイチティーエムエル",def:"Webページを作るための書き方・ファイル形式。ダブルクリックでブラウザに表示される。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"PDF",read:"ピーディーエフ",def:"レイアウトが崩れない文書ファイル。印刷・配布向き。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"kebab-case",read:"ケバブケース",def:"英小文字をハイフンでつなぐ書き方（invoice-check）。<b>Skill名の最推奨</b>。Mac/Windows両方で動く。"},
+ {cat:"パソコン・ファイル",kind:"kanji",name:"半角スラッシュ",read:"はんかくスラッシュ",def:"「/」記号。Skill呼び出し（/invoice-check）に使う。全角「／」では動かない。"},
+ {cat:"パソコン・ファイル",kind:"kana",name:"サジェスト",read:"",def:"入力の途中で出てくる<b>候補表示</b>。出たらTabキーで確定できる。"},
+ {cat:"パソコン・ファイル",kind:"kanji",name:"再起動",read:"さいきどう",def:"アプリを一度閉じて開き直すこと。Skillを置いた後は再起動が必要。"},
+ {cat:"パソコン・ファイル",kind:"kanji",name:"匿名化",read:"とくめいか",def:"名前などをAさん・B社に置き換え、誰の情報か特定できなくすること。AIに渡す前の基本。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"API",read:"エーピーアイ",def:"ソフト同士がデータをやり取りする<b>接続口</b>。MCPはこのAPIを通じて外部サービスを操作する。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"APIキー",read:"エーピーアイキー",def:"外部サービスに接続するための<b>合言葉（パスワードのようなもの）</b>。コードに直書きせず環境変数で管理する。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"OAuth",read:"オーオース",def:"パスワードを渡さずに「このアプリに◯◯を許可」と安全に連携する認証の仕組み。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"npm / npx",read:"エヌピーエム／エヌピーエックス",def:"プログラムの部品を導入・実行するコマンド。MCPサーバーの導入などに使う。"},
+ {cat:"パソコン・ファイル",kind:"abc",name:"cron",read:"クロン",def:"「毎朝7時に実行」のように<b>決まった時刻に処理を自動実行</b>する仕組み。ルーチン(/schedule)の考え方の元。"},
+ {cat:"パソコン・ファイル",kind:"kana",name:"ポーリング",read:"",def:"一定間隔で状態を<b>繰り返しチェック</b>すること。「新着メールが来たら通知」など。ループ(/loop)が得意。"},
+ {cat:"パソコン・ファイル",kind:"kana",name:"デプロイ",read:"",def:"作ったプログラムを実際に使える状態へ反映・公開すること。"},
+
+ // --- Excel・表計算 ---
+ {cat:"Excel・表計算",kind:"kanji",name:"関数",read:"かんすう",def:"計算や処理を自動でやる命令（=SUM など）。名前は覚えなくてOK、Claudeが書いてくれる。"},
+ {cat:"Excel・表計算",kind:"abc",name:"VLOOKUP / SUMIFS / IFERROR ほか",read:"ブイルックアップ／サムイフス／イフエラー",def:"Excelの関数名。それぞれ検索・条件付き合計・エラー処理など。暗記不要。"},
+ {cat:"Excel・表計算",kind:"abc",name:"#N/A",read:"エヌエー",def:"関数が値を見つけられない時のエラー表示。そのまま貼れば原因が分かる。"},
+ {cat:"Excel・表計算",kind:"kanji",name:"絶対参照（$）",read:"ぜったいさんしょう",def:"コピーしてもセルの位置を固定する書き方（$A$1）。「$をつけて」と頼める。"},
+ {cat:"Excel・表計算",kind:"kanji",name:"条件付き書式",read:"じょうけんつきしょしき",def:"条件に合うセルの色を自動で変える機能。「80%以下を赤に」など。"},
+ {cat:"Excel・表計算",kind:"kana",name:"マクロ / VBA",read:"マクロ／ブイビーエー",def:"Excelの操作を自動化する仕組み・言語。「パソコン操作の録画・再生」。コードは読まなくてよい。"},
+ {cat:"Excel・表計算",kind:"abc",name:"GAS",read:"ガス（Google Apps Script）",def:"Googleスプレッドシート版の自動化の仕組み。マクロのSheets版。"},
+ {cat:"Excel・表計算",kind:"abc",name:"PowerQuery",read:"パワークエリ",def:"Excelでデータを整える強力な機能。"},
+ {cat:"Excel・表計算",kind:"kana",name:"ピボットテーブル",read:"",def:"ドラッグ操作だけで<b>集計表（クロス集計）</b>を作る機能。「行＝店舗、列＝月で」と言葉で頼める。"},
+ {cat:"Excel・表計算",kind:"kanji",name:"クロス集計",read:"クロスしゅうけい",def:"縦軸×横軸で数値を集計した表。例：店舗×月の売上。"},
+ {cat:"Excel・表計算",kind:"kanji",name:"突合 / 数値突合",read:"とつごう",def:"<b>2つの表を照合して、一致しない差を見つける</b>作業。請求と入金の照合など。Claudeの得意技。"},
+ {cat:"Excel・表計算",kind:"kanji",name:"表記ゆれ",read:"ひょうきゆれ",def:"同じものの書き方が揃っていない状態（例：「(株)」と「株式会社」）。揃えると突合精度が上がる。"},
+ {cat:"Excel・表計算",kind:"kanji",name:"検算",read:"けんざん",def:"出した数字が正しいか、元データと照らし合わせて確かめること。AIに任せるほど大事。"},
+ {cat:"Excel・表計算",kind:"abc",name:".xlsx / .xlsm / .csv",read:"",def:"Excel系ファイルの種類。.xlsmは<b>マクロ入り</b>、.csvは文字だけのシンプルな表。"},
+ {cat:"Excel・表計算",kind:"abc",name:"OCR",read:"オーシーアール",def:"画像やPDFの文字を読み取って<b>テキスト化</b>する技術。領収書・手書きメモのデータ化に使う。"},
+
+ // --- Web・デザイン ---
+ {cat:"Web・デザイン",kind:"abc",name:"LP",read:"エルピー（ランディングページ）",def:"<b>1枚完結の宣伝用Webページ</b>。来店・申込ボタンを押してもらうのが目的。"},
+ {cat:"Web・デザイン",kind:"abc",name:"CTA",read:"シーティーエー",def:"「今すぐ申し込む」など<b>行動を促すボタン・文言</b>。動詞で書くと強い。"},
+ {cat:"Web・デザイン",kind:"kana",name:"ヒーロー / キービジュアル",read:"",def:"ページ最上部の主役画像＋キャッチコピー。3秒で「私向けだ」と思わせる部分。"},
+ {cat:"Web・デザイン",kind:"kana",name:"ベネフィット",read:"",def:"利用者が得られる<b>良いこと・効果</b>。「大容量乾燥」より「布団がふわふわに乾く」。"},
+ {cat:"Web・デザイン",kind:"kana",name:"キャッチコピー",read:"",def:"注目を集める短い宣伝文。数字型・質問型などの「型」がある。"},
+ {cat:"Web・デザイン",kind:"kana",name:"ブランドキット",read:"",def:"色・フォント・トーン・ロゴ位置などデザインの決まりごとセット。Skill化すれば全制作物が同じ顔に。"},
+ {cat:"Web・デザイン",kind:"abc",name:"A/Bテスト",read:"エービーテスト",def:"2パターン作って、反応の良い方を選ぶ手法。「見出し違いを2版」で簡単に試せる。"},
+ {cat:"Web・デザイン",kind:"kana",name:"ホスティング / Netlify Drop",read:"ネットリファイ ドロップ",def:"作ったWebページをネット上に<b>公開する場所・サービス</b>。ファイルをドラッグするだけで公開URLが出る。"},
+ {cat:"Web・デザイン",kind:"abc",name:"URL / ドメイン",read:"ユーアールエル／ドメイン",def:"Webページの住所／その中の「◯◯.com」の部分。"},
+ {cat:"Web・デザイン",kind:"abc",name:"QRコード",read:"キューアールコード",def:"スマホで読み取るとURLに飛ぶ四角い模様。紙→Webの導線に使う。"},
+ {cat:"Web・デザイン",kind:"abc",name:"px",read:"ピクセル",def:"画面・画像の大きさの単位。例：正方形1080px、縦長1080×1920px。"},
+ {cat:"Web・デザイン",kind:"abc",name:"pt",read:"ポイント",def:"文字サイズの単位。本文12pt以上、キャッチ24pt以上が印刷の目安。"},
+ {cat:"Web・デザイン",kind:"kanji",name:"入稿",read:"にゅうこう",def:"印刷会社にデータを渡すこと。"},
+ {cat:"Web・デザイン",kind:"kanji",name:"断ち切れ",read:"たちきれ",def:"紙の端ギリギリの文字や絵が、断裁で切れてしまうこと。端から5mm余白を空けると防げる。"},
+ {cat:"Web・デザイン",kind:"kana",name:"フリー素材 / Unsplash",read:"アンスプラッシュ",def:"無料で使える画像。<b>商用利用可かは必ず確認</b>。"},
+ {cat:"Web・デザイン",kind:"abc",name:"SVG",read:"エスブイジー",def:"拡大しても粗くならない画像形式。イラスト調ならその場で描かせられる。"},
+
+ // --- SNS・動画 ---
+ {cat:"SNS・動画",kind:"kana",name:"カルーセル",read:"",def:"横スワイプで<b>複数枚見られる</b>Instagram投稿。表紙＋数枚の構成。"},
+ {cat:"SNS・動画",kind:"kana",name:"キャプション",read:"",def:"投稿に付ける<b>説明文・本文</b>。"},
+ {cat:"SNS・動画",kind:"kana",name:"ハッシュタグ",read:"",def:"#をつけたキーワード。検索で見つけてもらうため。大・中・小規模を混ぜて30個など。"},
+ {cat:"SNS・動画",kind:"kana",name:"フィード",read:"",def:"通常の投稿一覧。残り続ける「資産」。"},
+ {cat:"SNS・動画",kind:"kana",name:"ストーリーズ",read:"",def:"24時間で消える縦長投稿。気軽な「会話」。空き枠告知やアンケートに。"},
+ {cat:"SNS・動画",kind:"kana",name:"リール",read:"",def:"Instagramの<b>短い縦型動画</b>。フック→本編→CTAの構成で台本を作れる。"},
+ {cat:"SNS・動画",kind:"kana",name:"インサイト",read:"",def:"投稿の<b>反応データ</b>（保存数・リーチなど）。人気投稿の分析に使う。"},
+ {cat:"SNS・動画",kind:"abc",name:"DM",read:"ディーエム（ダイレクトメッセージ）",def:"SNS上の1対1の個別メッセージ。"},
+ {cat:"SNS・動画",kind:"kana",name:"リーチ",read:"",def:"投稿が届いた人数。"},
+
+ // --- ビジネス・その他 ---
+ {cat:"ビジネス・その他",kind:"abc",name:"SaaS",read:"サース",def:"月額で使うクラウド型のソフト・サービス。「SaaSの死」は“専用ツールを自作する時代へ”という見方。"},
+ {cat:"ビジネス・その他",kind:"kana",name:"バックオフィス",read:"",def:"経理・総務・人事など、社内を支える<b>事務部門</b>。"},
+ {cat:"ビジネス・その他",kind:"kana",name:"Slack / Teams",read:"スラック／チームス",def:"チームの連絡用チャットツール。レポートの自動投稿先などに。"},
+ {cat:"ビジネス・その他",kind:"kana",name:"freee",read:"フリー",def:"クラウド会計ソフト。MCP連携で仕訳を直接登録する例がある。"},
+ {cat:"ビジネス・その他",kind:"kana",name:"マイナンバー",read:"",def:"個人番号。<b>絶対にAIに入力してはいけない</b>重要な個人情報。"},
+ {cat:"ビジネス・その他",kind:"kanji",name:"景品表示法",read:"けいひんひょうじほう",def:"誇大・不当な表示を禁じる法律。「汚れが完全に落ちる」等の断定表現に注意。"},
+ {cat:"ビジネス・その他",kind:"kanji",name:"肖像権 / 著作権",read:"しょうぞうけん／ちょさくけん",def:"人物写真や他人の作品を勝手に使えない権利。お客様の写真は書面で許可を取る。"},
+ {cat:"ビジネス・その他",kind:"kanji",name:"仕訳 / 勘定科目",read:"しわけ／かんじょうかもく",def:"会計で取引を分類項目に振り分けること／その分類項目（旅費交通費など）。"},
+ {cat:"ビジネス・その他",kind:"kanji",name:"稟議書",read:"りんぎしょ",def:"社内で承認をもらうための書類。ドラフト作成や決裁ルート提案を頼める。"},
+ {cat:"ビジネス・その他",kind:"kanji",name:"予実 / 予実差分",read:"よじつ",def:"予算と実績、およびその差。月次・四半期で自動分析させられる。"},
+ {cat:"ビジネス・その他",kind:"kanji",name:"月次 / 月次決算",read:"げつじ",def:"毎月行う集計・締めの作業。チェックリスト化・自動化の定番テーマ。"},
+ {cat:"ビジネス・その他",kind:"kanji",name:"たたき台 / 一次作成",read:"",def:"完成前のラフな下書き。AIに最初の案を作らせ、人が仕上げる使い方が基本。"},
+ {cat:"ビジネス・その他",kind:"abc",name:"FAQ",read:"エフエーキュー",def:"よくある質問とその回答。社内の問い合わせ対応をBot化する題材になる。"},
+ {cat:"ビジネス・その他",kind:"kana",name:"バトルカード",read:"",def:"営業で使う<b>競合対策の早見表</b>。自社と競合の比較・切り返しトークをまとめたもの。AIで自動更新できる。"},
+ {cat:"ビジネス・その他",kind:"kana",name:"パーソナライズ",read:"",def:"相手に合わせて内容を<b>個別最適化</b>すること。各社のニュースに触れたメール冒頭など。返信率が上がる。"},
+ {cat:"ビジネス・その他",kind:"abc",name:"IR",read:"アイアール",def:"企業が投資家向けに出す<b>業績・経営情報</b>。商談前のリサーチで切り口を探すのに使える。"},
+ {cat:"ビジネス・その他",kind:"kanji",name:"失注 / 受注",read:"しっちゅう／じゅちゅう",def:"商談を逃すこと／契約を取ること。失注案件をAIで分析しパターンを抽出できる。"},
+ {cat:"ビジネス・その他",kind:"kana",name:"パイプライン（営業）",read:"",def:"見込み案件の進捗状況の流れ。週次で受注・失注を集計し管理する。"},
+ {cat:"ビジネス・その他",kind:"kana",name:"トークスクリプト",read:"",def:"営業の<b>話し方の台本</b>。反応データをもとにAIで改善できる。"},
+];
+
+/* ================= 用語集 描画 ================= */
+const list3=document.getElementById('list3'),cats3=document.getElementById('cats3'),search3=document.getElementById('search3'),count3=document.getElementById('count3'),noresult3=document.getElementById('noresult3');
+let activeCat3=ALL;
+const gCats=[ALL,...[...new Set(GLOSSARY.map(d=>d.cat))]];
+gCats.forEach(c=>{const b=document.createElement('button');b.className='cat'+(c===ALL?' active':'');b.textContent=c;b.onclick=()=>{activeCat3=c;[...cats3.children].forEach(x=>x.classList.toggle('active',x.textContent===c));renderGloss();};cats3.appendChild(b);});
+const KINDLABEL={abc:"ABC",kana:"カナ",kanji:"和"};
+function renderGloss(){
+  const kw=search3.value.trim().toLowerCase();list3.innerHTML='';let shown=0;
+  gCats.filter(c=>c!==ALL).forEach(c=>{
+    if(activeCat3!==ALL&&activeCat3!==c)return;
+    const items=GLOSSARY.filter(d=>d.cat===c).filter(d=>!kw||(d.name+d.read+d.def+d.cat).toLowerCase().includes(kw));
+    if(!items.length)return;
+    const h=document.createElement('div');h.className='section-title';h.textContent=c;list3.appendChild(h);
+    items.forEach(d=>{shown++;
+      const el=document.createElement('div');el.className='term';
+      el.innerHTML=`<span class="kind ${d.kind}">${KINDLABEL[d.kind]}</span><div class="body"><p class="name">${d.name}${d.read?`<span class="read">${d.read}</span>`:''}</p><p class="def">${d.def}</p></div>`;
+      list3.appendChild(el);
+    });
+  });
+  noresult3.style.display=shown===0?'block':'none';
+  count3.textContent=(kw||activeCat3!==ALL)?`${shown}語を表示中`:`全${GLOSSARY.length}語を収録`;
+}
+renderGloss();
+
+/* ===== 検索を全タブで連動 ===== */
+function syncSearch(val){
+  if(search.value!==val) search.value=val;
+  if(search2.value!==val) search2.value=val;
+  if(search3.value!==val) search3.value=val;
+  renderQA();renderUse();renderGloss();
+}
+[search,search2,search3].forEach(inp=>inp.addEventListener('input',e=>syncSearch(e.target.value)));
+
+/* ================= タブ切替 ================= */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const v=t.dataset.view;
+    document.getElementById('view-qa').classList.toggle('active',v==='qa');
+    document.getElementById('view-use').classList.toggle('active',v==='use');
+    document.getElementById('view-glossary').classList.toggle('active',v==='glossary');
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+});
+</script>
+</body>
+</html>

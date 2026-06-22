@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>従業員マスター</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1f2937; --muted:#6b7280;
+    --line:#e5e7eb; --brand:#2563eb; --brand-d:#1d4ed8;
+    --ok:#16a34a; --warn:#d97706; --bad:#dc2626; --leave:#7c3aed;
+    --chip:#eef2ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+       background:var(--bg);color:var(--ink);font-size:14px}
+  header{background:var(--card);border-bottom:1px solid var(--line);
+         padding:14px 22px;display:flex;align-items:center;gap:18px;position:sticky;top:0;z-index:20}
+  header h1{font-size:18px;margin:0}
+  header .sub{color:var(--muted);font-size:12px}
+  nav{display:flex;gap:4px;margin-left:auto;align-items:center}
+  nav button{background:none;border:none;padding:9px 14px;border-radius:8px;cursor:pointer;
+             font-size:14px;color:var(--muted);font-weight:600}
+  nav button.active{background:var(--chip);color:var(--brand-d)}
+  .rolebadge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;margin-left:6px}
+  .role-admin{background:#dcfce7;color:#166534}.role-user{background:#f1f5f9;color:#475569}
+  main{padding:22px;max-width:1200px;margin:0 auto}
+  .tab{display:none}.tab.active{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+  .grid{display:grid;gap:14px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .kpi .label{color:var(--muted);font-size:12px}
+  .kpi .val{font-size:26px;font-weight:700;margin-top:4px}
+  .kpi .val small{font-size:13px;color:var(--muted);font-weight:600}
+  .charts{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:820px){.charts{grid-template-columns:1fr}}
+  h2{font-size:15px;margin:0 0 12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{color:var(--muted);font-weight:600;font-size:12px;position:sticky;top:0;background:var(--card)}
+  tbody tr:hover{background:#f9fafb;cursor:pointer}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .b-active{background:#dcfce7;color:#166534}
+  .b-retired{background:#fee2e2;color:#991b1b}
+  .b-leave{background:#ede9fe;color:#5b21b6}
+  .b-ok{background:#dcfce7;color:#166534}
+  .b-pend{background:#fef3c7;color:#92400e}
+  .b-train{background:#ffedd5;color:#9a3412}
+  .b-done{background:#e0e7ff;color:#3730a3}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  input,select,textarea{font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line);
+        border-radius:8px;background:#fff;color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--chip);border-color:var(--brand)}
+  .btn{background:var(--brand);color:#fff;border:none;padding:9px 14px;border-radius:8px;
+       cursor:pointer;font-weight:600;font-size:13px}
+  .btn:hover{background:var(--brand-d)}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost:hover{background:#f3f4f6}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .btn.danger{background:var(--bad)}
+  .search{flex:1;min-width:180px}
+  .right{margin-left:auto}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;z-index:50;
+           align-items:flex-start;justify-content:center;padding:30px 16px;overflow:auto}
+  .overlay.show{display:flex}
+  .modal{background:var(--card);border-radius:14px;width:100%;max-width:760px;padding:22px}
+  .modal h2{font-size:17px}
+  .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.formgrid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:12px;color:var(--muted);font-weight:600}
+  .field.full{grid-column:1/-1}
+  .section-title{font-size:13px;font-weight:700;color:var(--brand-d);margin:18px 0 4px;
+                 border-top:1px dashed var(--line);padding-top:14px}
+  .section-title:first-of-type{border-top:none;padding-top:0;margin-top:6px}
+  .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+  .history{margin-top:6px}
+  .history .h-item{border-left:3px solid var(--brand);padding:4px 0 4px 12px;margin-bottom:8px;font-size:12px}
+  .history .h-item .h-date{color:var(--muted)}
+  .muted{color:var(--muted)}
+  .pill-row{display:flex;gap:6px;flex-wrap:wrap}
+  .filterchip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;
+              cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)}
+  .filterchip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .empty{text-align:center;color:var(--muted);padding:40px}
+  .copybox{display:flex;gap:8px;align-items:center;background:#f3f4f6;border-radius:8px;padding:8px 12px;font-size:12px}
+  .copybox code{flex:1;color:var(--brand-d)}
+  .note{font-size:12px;color:var(--muted);background:#f9fafb;border:1px solid var(--line);
+        border-radius:8px;padding:10px 12px}
+  .changewrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end}
+  @media(max-width:640px){.changewrap{grid-template-columns:1fr}}
+  /* master tags */
+  .mtag{display:inline-flex;align-items:center;gap:6px;background:var(--chip);color:var(--brand-d);
+        padding:5px 10px;border-radius:8px;font-size:12px;font-weight:600;margin:0 6px 6px 0}
+  .mtag button{background:none;border:none;color:var(--brand-d);cursor:pointer;font-size:14px;line-height:1;padding:0}
+  .mrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .lock{opacity:.55}
+  .adminbox{max-width:420px}
+  .vval{font-size:15px;font-weight:600;padding:6px 0;border-bottom:1px solid var(--line)}
+  .mtabs{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 16px;border-bottom:1px solid var(--line);padding-bottom:10px}
+  .mtab{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 12px;
+        font-size:12px;font-weight:600;color:var(--muted);cursor:pointer}
+  .mtab:hover{background:#f3f4f6}
+  .mtab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .mpanel{display:none}.mpanel.on{display:block}
+  .storebar{height:18px;background:var(--brand);border-radius:4px;min-width:2px}
+  .colmenu{position:absolute;right:0;top:32px;background:var(--card);border:1px solid var(--line);
+           border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.14);padding:10px 12px;z-index:30;
+           min-width:180px;max-height:320px;overflow:auto}
+  .colmenu label{display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 0;cursor:pointer;white-space:nowrap}
+  .colmenu input{width:auto}
+  .onb-step{font-size:15px;font-weight:700;color:#fff;background:var(--brand);
+            border-radius:8px;padding:8px 14px;margin:14px 0 6px}
+  .onb-step:first-child{margin-top:0}
+  body.public header,body.public main{display:none}
+  body.public #onboardOverlay .modal{max-width:760px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>従業員マスター</h1>
+    <div class="sub" id="companyLabel">個人情報・雇用内容・通勤経路を一元管理</div>
+  </div>
+  <nav>
+    <button data-tab="dash" class="admin-only active">ダッシュボード</button>
+    <button data-tab="list">従業員一覧</button>
+    <button data-tab="stores">店舗別人数</button>
+    <button data-tab="onboard" class="admin-only">入職手続き</button>
+    <button data-tab="admin" class="admin-only">⚙ 管理者設定</button>
+    <button data-tab="locations">拠点マスタ</button>
+    <span class="muted" id="userLabel" style="font-size:12px;margin-left:8px"></span>
+    <span class="rolebadge role-user" id="roleBadge">一般</span>
+    <button class="btn ghost sm" id="logoutBtn" onclick="doLogout()" style="display:none">ログアウト</button>
+  </nav>
+</header>
+
+<!-- ===== ログイン ===== -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal" style="max-width:380px">
+    <h2>ログイン</h2>
+    <p class="muted" style="margin-top:0">ログインIDとパスワードを入力してください。</p>
+    <div class="field" style="margin-bottom:10px"><label>ログインID</label><input id="loginId" autocomplete="off"></div>
+    <div class="field"><label>パスワード</label>
+      <input id="loginPass" type="password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="modal-actions"><button class="btn" onclick="doLogin()">ログイン</button></div>
+    <div class="note">初期アカウント： 管理者 <b>admin / admin</b> ／ 一般 <b>user / user</b></div>
+  </div>
+</div>
+
+<main>
+  <!-- ===== ダッシュボード ===== -->
+  <section id="dash" class="tab active">
+    <div class="grid kpis" id="kpis"></div>
+    <div class="grid charts">
+      <div class="card"><h2>在籍ステータス内訳</h2><canvas id="chStatus" height="200"></canvas></div>
+      <div class="card"><h2>勤続年数の分布</h2><canvas id="chTenure" height="200"></canvas></div>
+      <div class="card"><h2>年齢層の分布</h2><canvas id="chAge" height="220"></canvas></div>
+      <div class="card"><h2>年度別 退職者数 / 退職率</h2><canvas id="chTurn" height="220"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ===== 従業員一覧 ===== -->
+  <section id="list" class="tab">
+    <div class="card">
+      <div class="toolbar">
+        <input class="search" id="search" placeholder="氏名・会社名・店舗で検索">
+        <div class="pill-row admin-only" id="statusFilter">
+          <span class="filterchip on" data-f="all">すべて</span>
+          <span class="filterchip" data-f="在職">在職</span>
+          <span class="filterchip" data-f="産休・育休">産休・育休</span>
+          <span class="filterchip" data-f="退職">退職</span>
+        </div>
+        <div class="right pill-row">
+          <div class="admin-only" style="position:relative;display:inline-block">
+            <button class="btn ghost sm" onclick="toggleColPicker()">表示項目 ▾</button>
+            <div id="colPickerMenu" class="colmenu" style="display:none"></div>
+          </div>
+          <button class="btn ghost sm admin-only" onclick="exportCSV()">在職者をCSV出力</button>
+          <button class="btn ghost sm admin-only" onclick="downloadImportTemplate()">CSVテンプレート</button>
+          <button class="btn ghost sm admin-only" onclick="document.getElementById('importCsvFile').click()">CSVで一括追加</button>
+          <input type="file" id="importCsvFile" accept=".csv" style="display:none" onchange="importEmployeesCSV(this)">
+          <button class="btn sm admin-only" onclick="openEditor()">＋ 従業員を追加</button>
+        </div>
+      </div>
+      <div style="overflow:auto;max-height:62vh">
+        <table>
+          <thead id="empHead"></thead>
+          <tbody id="empRows"></tbody>
+        </table>
+        <div class="empty" id="emptyMsg" style="display:none">該当する従業員がいません</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 店舗別人数 ===== -->
+  <section id="stores" class="tab">
+    <div class="card">
+      <h2>店舗別 在籍人数</h2>
+      <p class="muted" style="margin-top:0">配属店舗ごとの在籍者数（在職・産休/育休を含む）です。</p>
+      <table><thead><tr><th>店舗</th><th>人数</th><th style="width:50%">構成比</th></tr></thead>
+        <tbody id="storeCounts"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ===== 拠点マスタ ===== -->
+  <section id="locations" class="tab">
+    <div class="card">
+      <div class="toolbar"><h2 style="margin:0">拠点マスタ（会社情報）</h2>
+        <button class="btn sm right admin-only" id="locEditBtn" onclick="toggleLocEdit()">編集する</button></div>
+      <p class="muted" style="margin-top:0">各社の住所・連絡先・代表者を一覧で管理します。編集するには「編集する」を押してください。</p>
+      <div style="overflow:auto">
+      <table>
+        <thead><tr><th>会社名</th><th>郵便番号</th><th>住所</th><th>連絡先</th><th>代表者</th><th>備考</th><th id="locDelHead"></th></tr></thead>
+        <tbody id="locationRows"></tbody>
+      </table>
+      </div>
+      <div class="mrow" id="locAddRow" style="margin-top:12px;display:none">
+        <input id="loc_name" placeholder="会社名" style="max-width:160px">
+        <input id="loc_postal" placeholder="郵便番号" style="max-width:90px">
+        <input id="loc_address" placeholder="住所" style="max-width:180px">
+        <input id="loc_tel" placeholder="連絡先" style="max-width:120px">
+        <input id="loc_rep" placeholder="代表者" style="max-width:120px">
+        <button class="btn sm" onclick="addCompany()">会社を追加</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="toolbar"><h2 style="margin:0">店舗住所録</h2></div>
+      <p class="muted" style="margin-top:0">各店舗の郵便番号・住所・連絡先・店長を一覧で管理します（編集は管理者のみ）。</p>
+      <div style="overflow:auto">
+      <table>
+        <thead><tr><th>店舗</th><th>郵便番号</th><th>住所</th><th>連絡先</th><th>店長</th></tr></thead>
+        <tbody id="storeAddrRows"></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 入職手続き ===== -->
+  <section id="onboard" class="tab">
+    <div class="card">
+      <h2>新規入職者への手続きURL</h2>
+      <p class="muted" style="margin-top:0">新入職者にこのURLを送付し、本人に入力してもらいます。回答状況は下の一覧で確認できます。</p>
+      <div class="copybox">
+        <code id="formUrl"></code>
+        <button class="btn sm" onclick="copyUrl()">URLをコピー</button>
+        <button class="btn ghost sm" onclick="openOnboardForm()">入力フォームを開く</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0">入職手続きの回答状況</h2>
+        <button class="btn sm right" onclick="openOnboardForm()">＋ 新規入職者を登録/入力</button>
+      </div>
+      <table>
+        <thead><tr><th>社員番号</th><th>氏名</th><th>配属店舗</th><th>入社日</th><th>回答状況</th><th></th></tr></thead>
+        <tbody id="onboardRows"></tbody>
+      </table>
+      <div class="empty" id="onboardEmpty" style="display:none">入職手続き対象者がいません</div>
+    </div>
+  </section>
+
+  <!-- ===== 管理者設定 ===== -->
+  <section id="admin" class="tab">
+    <div class="card">
+      <h2>マスタ管理</h2>
+      <div class="note">ここで登録した値が、従業員情報や入職フォームの選択肢になります。使用中の値は削除できません。</div>
+    </div>
+    <div class="grid charts">
+      <div class="card"><h2>所属店舗</h2><div id="m_stores"></div>
+        <div class="mrow"><input id="add_stores" placeholder="店舗を追加">
+          <button class="btn sm" onclick="addMaster('stores')">追加</button></div></div>
+      <div class="card"><h2>役職</h2><div id="m_titles"></div>
+        <div class="mrow"><input id="add_titles" placeholder="役職を追加">
+          <button class="btn sm" onclick="addMaster('titles')">追加</button></div></div>
+    </div>
+    <div class="card">
+      <h2>等級と給与レンジ（L1〜L6 等級制度）</h2>
+      <div class="note">月給基準額は、月給者の等級選択時に基本給へ自動反映されます。L1は時給制です。</div>
+      <div style="overflow:auto;margin-top:10px">
+      <table><thead><tr><th>等級</th><th>ポジション</th><th>月給基準額/時給</th><th>下限</th><th>上限</th><th>備考（要件・昇格目安）</th><th></th></tr></thead>
+        <tbody id="m_grades"></tbody></table>
+      </div>
+      <div class="mrow">
+        <input id="add_grades" placeholder="等級名" style="max-width:80px">
+        <input id="add_gpos" placeholder="ポジション" style="max-width:150px">
+        <input id="add_gbase" type="number" placeholder="基準額" style="max-width:90px">
+        <input id="add_gmin" type="number" placeholder="下限" style="max-width:80px">
+        <input id="add_gmax" type="number" placeholder="上限" style="max-width:80px">
+        <input id="add_gnote" placeholder="備考" style="max-width:150px">
+        <button class="btn sm" onclick="addGrade()">追加</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>従業員一覧の表示項目・並び順</h2>
+      <div class="note">従業員一覧（管理者）に表示する列と順序を設定します。▲▼で並べ替え、チェックで表示/非表示を切り替えます。</div>
+      <div id="listColConfig" style="margin-top:10px"></div>
+      <button class="btn ghost sm" style="margin-top:8px" onclick="resetListCols()">既定に戻す</button>
+    </div>
+    <div class="card">
+      <h2>ログインユーザー管理</h2>
+      <div class="note">ログインIDごとに権限（管理者／一般）を設定します。一般ユーザーは「会社名・所属・氏名・役職・入社日・退職日・在籍状況」を閲覧できます。管理者がログインID／パスワードを設定します。</div>
+      <table style="margin-top:12px"><thead><tr><th>ログインID</th><th>表示名</th><th>権限</th><th>パスワード</th><th></th></tr></thead>
+        <tbody id="userRows"></tbody></table>
+      <div class="mrow">
+        <input id="u_id" placeholder="ログインID" style="max-width:130px">
+        <input id="u_name" placeholder="表示名" style="max-width:130px">
+        <select id="u_role"><option value="general">一般</option><option value="admin">管理者</option></select>
+        <input id="u_pass" placeholder="パスワード" style="max-width:130px">
+        <button class="btn sm" onclick="addUser()">追加</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>入職回答フォームの項目設定</h2>
+      <div class="note">入職者が記入するフォームの項目です。ラベルの変更・必須の付け外し・並べ替え・項目の追加/削除ができます。コア項目（氏名・所属・入社日など）は削除できません。</div>
+      <table style="margin-top:12px"><thead><tr><th>並び</th><th>表示ラベル</th><th>区分</th><th>種別</th><th style="text-align:center">必須</th><th></th></tr></thead>
+        <tbody id="formFieldRows"></tbody></table>
+      <div class="mrow">
+        <input id="ff_label" placeholder="新しい項目名" style="max-width:160px">
+        <select id="ff_type">
+          <option value="text">テキスト</option><option value="textarea">複数行テキスト</option>
+          <option value="date">日付</option><option value="number">数値</option>
+          <option value="tel">電話</option><option value="email">メール</option>
+          <option value="select">選択肢</option><option value="note">説明文（入力なし）</option>
+          <option value="file">ファイル添付</option></select>
+        <input id="ff_options" placeholder="選択肢（カンマ区切り）／説明文の本文" style="max-width:200px">
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)">
+          <input type="checkbox" id="ff_required" style="width:auto"> 必須</label>
+        <button class="btn sm" onclick="addFormField()">項目を追加</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== 編集モーダル ===== -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">従業員情報</h2>
+    <form id="empForm" onsubmit="return saveEmp(event)" novalidate>
+      <input type="hidden" id="f_id">
+      <div class="mtabs" id="empTabs">
+        <button type="button" class="mtab on" data-p="basic">基本情報</button>
+        <button type="button" class="mtab" data-p="emp">雇用・給与</button>
+        <button type="button" class="mtab" data-p="insurance">各種保険</button>
+        <button type="button" class="mtab" data-p="emg">緊急連絡先</button>
+        <button type="button" class="mtab" data-p="docs">機密情報</button>
+        <button type="button" class="mtab" data-p="commute">通勤</button>
+        <button type="button" class="mtab" data-p="consent">同意書</button>
+        <button type="button" class="mtab" data-p="status">在籍・手続き</button>
+        <button type="button" class="mtab" data-p="hist">変更履歴</button>
+      </div>
+
+      <div class="mpanel on" data-panel="basic">
+        <div class="formgrid">
+          <div class="field"><label>社員番号</label><input id="f_code" placeholder="自動採番" ></div>
+          <div class="field"><label>氏名 *</label><input id="f_name"></div>
+          <div class="field"><label>フリガナ</label><input id="f_kana"></div>
+          <div class="field"><label>性別</label><select id="f_gender"><option value="">-</option><option>男性</option><option>女性</option><option>その他</option></select></div>
+          <div class="field"><label>生年月日 <span class="muted" id="f_age" style="font-size:11px"></span></label><input id="f_birth" type="date" onchange="updateAge()"></div>
+          <div class="field"><label>電話番号</label><input id="f_tel"></div>
+          <div class="field"><label>郵便番号</label><input id="f_postal" placeholder="例）100-0001"></div>
+          <div class="field"><label>メール</label><input id="f_email" type="email"></div>
+          <div class="field full"><label>住所</label><input id="f_addr"></div>
+          <div class="field"><label>会社名 *</label><select id="f_company"></select></div>
+          <div class="field"><label>配属店舗</label><select id="f_store"></select></div>
+          <div class="field"><label>研修店舗</label><select id="f_trainStore"></select></div>
+          <div class="field"><label>研修状況</label><select id="f_training"><option>対象外</option><option>研修中</option></select></div>
+          <div class="field full"><label>担当店舗（店長/エリアマネージャー等・複数可）</label>
+            <div id="managedBox"></div>
+            <div class="mrow" style="margin-top:6px"><select id="managed_pick" style="max-width:220px"></select>
+              <button type="button" class="btn ghost sm" onclick="addManaged()">＋ 担当店舗を追加</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mpanel" data-panel="emg">
+        <div class="formgrid">
+          <div class="field"><label>氏名</label><input id="f_emgName"></div>
+          <div class="field"><label>本人との関係（続柄）</label><input id="f_emgRel" placeholder="例）配偶者 / 親 / 兄弟姉妹"></div>
+          <div class="field"><label>電話番号</label><input id="f_emgTel"></div>
+          <div class="field"><label>住所</label><input id="f_emgAddr" placeholder="本人と同じ場合は「同上」"></div>
+        </div>
+      </div>
+
+      <div class="mpanel" data-panel="docs">
+        <div class="formgrid">
+          <div class="field"><label>マイナンバー</label><input id="f_mynum" placeholder="****-****-****"></div>
+          <div class="field"><label>基礎年金番号</label><input id="f_pension"></div>
+          <div class="field"><label>雇用保険番号</label><input id="f_emp_ins"></div>
+          <div class="field"><label>振込口座（銀行/支店/番号）</label><input id="f_bank"></div>
+          <div class="field full"><label>通帳・WEB明細の添付</label>
+            <div id="bankProofView" style="margin:4px 0"></div>
+            <input id="f_bankProofFile" type="file" accept="image/*,application/pdf" onchange="onEditorBankProof(this)"></div>
+        </div>
+      </div>
+
+      <div class="mpanel" data-panel="emp">
+        <div class="formgrid">
+          <div class="field"><label>雇用形態</label><select id="f_type"><option>正社員</option><option>契約社員</option><option>パート・アルバイト</option><option>派遣</option><option>業務委託</option></select></div>
+          <div class="field"><label>役職</label><select id="f_title"></select></div>
+          <div class="field"><label>等級</label><select id="f_grade" onchange="onGradeChange()"></select></div>
+          <div class="field"><label>入社日 *</label><input id="f_hire" type="date"></div>
+        </div>
+
+        <div class="section-title">最新の給与</div>
+        <div class="card" style="margin-top:8px;background:#f9fafb" id="paySummary"></div>
+
+        <div class="formgrid" style="margin-top:14px">
+          <div class="field"><label>給与区分</label>
+            <select id="f_payType" onchange="onPayTypeChange()"><option>月給</option><option>時給</option></select></div>
+          <div class="field"><label id="f_salaryLabel">基本給（月額・円）</label><input id="f_salary" type="number" min="0" oninput="updatePayTotal()">
+            <span class="muted" id="gradeHint" style="font-size:11px"></span></div>
+          <div class="field" id="hourlyPresetWrap" style="display:none"><label>時給設定</label>
+            <select id="f_hourlyPreset" onchange="applyHourlyPreset()">
+              <option value="">手入力（その他）</option>
+              <option value="trainee">研修修了者（平日¥1,300／土日・深夜¥1,350）</option></select></div>
+          <div class="field" id="hourlyPremiumWrap" style="display:none"><label>時給（土日・深夜・円）</label>
+            <input id="f_hourlyPremium" type="number" min="0" oninput="updatePayTotal()"></div>
+          <div class="field"><label>給与適用日</label><input id="f_salaryDate" type="date" onchange="updatePayTotal()"></div>
+        </div>
+
+        <div class="section-title">手当（月給に含む）</div>
+        <div class="note">出張手当・役職手当など、月給に合算される手当です。</div>
+        <div id="allowanceBox" style="margin-top:10px"></div>
+        <button type="button" class="btn ghost sm" onclick="addAllowanceRow()">＋ 手当を追加</button>
+
+        <div class="section-title">その他手当・補助（月給に含まない）</div>
+        <div class="note">家賃補助など、月給には合算されない手当・補助です。</div>
+        <div id="benefitBox" style="margin-top:10px"></div>
+        <button type="button" class="btn ghost sm" onclick="addBenefitRow()">＋ その他手当を追加</button>
+
+        <div class="section-title">給与改定履歴</div>
+        <div class="history" id="salaryHistBox"></div>
+
+        <div class="section-title">雇用契約書（PDF・複数可）</div>
+        <div class="note">雇用契約書のPDFを保存します。複数登録できます。</div>
+        <div id="contractsBox" style="margin:8px 0"></div>
+        <input id="f_contractFile" type="file" accept="application/pdf,image/*" multiple onchange="onContractPick(this)">
+        <div class="section-title">契約書の変更歴</div>
+        <div class="history" id="contractLogBox"></div>
+      </div>
+
+      <div class="mpanel" data-panel="insurance">
+        <div class="formgrid">
+          <div class="field"><label>雇用保険</label><select id="f_empIns"><option>加入</option><option>未加入</option></select></div>
+          <div class="field"><label>社会保険</label><select id="f_socialIns"><option>加入</option><option>未加入</option></select></div>
+        </div>
+        <div class="note" style="margin-top:10px">※雇用保険・社会保険の加入有無を管理します。番号は「機密情報」タブにあります。</div>
+      </div>
+
+      <div class="mpanel" data-panel="commute">
+        <div class="formgrid">
+          <div class="field"><label>交通手段</label><select id="f_commute"><option>電車</option><option>バス</option><option>電車＋バス</option><option>自動車</option><option>自転車</option><option>徒歩</option></select></div>
+          <div class="field"><label>定期代（月額・円）</label><input id="f_fare" type="number" min="0"></div>
+          <div class="field full"><label>経路（自宅〜勤務地）</label><input id="f_route" placeholder="例）〇〇駅 → △△駅 → 徒歩10分"></div>
+        </div>
+      </div>
+
+      <div class="mpanel" data-panel="consent">
+        <div class="section-title">同意書（PDF）</div>
+        <div class="note">入職時の同意書などのPDFを保存します。</div>
+        <div id="docview_consent" style="margin:8px 0"></div>
+        <input id="f_consentFile" type="file" accept="application/pdf,image/*" onchange="onPickDoc(this,'consent')">
+      </div>
+
+      <div class="mpanel" data-panel="status">
+        <div class="formgrid">
+          <div class="field"><label>ステータス</label>
+            <select id="f_status" onchange="toggleStatusDate()">
+              <option>在職</option><option>産休・育休</option><option>退職</option>
+            </select></div>
+          <div class="field" id="statusDateWrap"><label id="statusDateLabel">退職日</label><input id="f_statusDate" type="date"></div>
+          <div class="field"><label>入職手続き</label><select id="f_onboard"><option value="回答済み">回答済み</option><option value="未回答">未回答</option></select></div>
+        </div>
+        <div id="customWrap" style="display:none">
+          <div class="section-title">フォーム回答（追加項目）</div>
+          <div class="formgrid" id="customBox"></div>
+        </div>
+      </div>
+
+      <div class="mpanel" data-panel="hist">
+        <div id="changeSection">
+          <div class="note">月次の変更対応はここに記録します。過去の記録はすべて保持されます。</div>
+          <div class="formgrid" style="margin-top:10px">
+            <div class="field"><label>適用日</label><input id="c_date" type="date"></div>
+            <div class="field"><label>変更項目</label>
+              <select id="c_field" onchange="onChangeFieldSelect()"></select></div>
+            <div class="field"><label>変更内容</label><span id="c_noteWrap"></span></div>
+            <div class="field"><label>&nbsp;</label><button type="button" class="btn ghost" onclick="addChange()">この変更を追加</button></div>
+          </div>
+          <div class="history" id="historyBox" style="margin-top:6px"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn ghost danger" id="delBtn" onclick="deleteEmp()" style="margin-right:auto">削除</button>
+        <button type="button" class="btn ghost" id="closeBtn" onclick="closeModal()">閉じる</button>
+        <button type="button" class="btn" id="editBtn" onclick="enableEdit()">編集する</button>
+        <button type="submit" class="btn" id="saveBtn">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== 入職フォーム（本人入力想定）モーダル ===== -->
+<div class="overlay" id="onboardOverlay">
+  <div class="modal">
+    <h2>入職手続きフォーム</h2>
+    <p class="muted" style="margin-top:0">新しく入職される方にご記入いただく想定のフォームです。送信すると一覧に「回答済み」で登録されます。</p>
+    <form onsubmit="return submitOnboard(event)">
+      <div class="formgrid" id="onboardFormBody"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="onboardCancel" onclick="closeOnboardForm()">キャンセル</button>
+        <button type="submit" class="btn">提出する</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== 閲覧モーダル（一般ユーザー用） ===== -->
+<div class="overlay" id="viewOverlay">
+  <div class="modal" style="max-width:420px">
+    <h2 id="v_title">従業員情報</h2>
+    <div class="formgrid">
+      <div class="field"><label>会社名</label><div id="v_company" class="vval"></div></div>
+      <div class="field"><label>配属店舗</label><div id="v_dept" class="vval"></div></div>
+      <div class="field"><label>氏名</label><div id="v_name" class="vval"></div></div>
+      <div class="field"><label>役職</label><div id="v_title2" class="vval"></div></div>
+      <div class="field"><label>入社日</label><div id="v_hire" class="vval"></div></div>
+      <div class="field"><label>退職日</label><div id="v_retire" class="vval"></div></div>
+      <div class="field"><label>在籍状況</label><div id="v_status" class="vval"></div></div>
+    </div>
+    <div class="note" style="margin-top:14px">一般ユーザーは上記の項目のみ閲覧できます。</div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeView()">閉じる</button></div>
+  </div>
+</div>
+
+<!-- ===== 選択肢編集モーダル（回答フォームの選択肢） ===== -->
+<div class="overlay" id="optOverlay">
+  <div class="modal" style="max-width:420px">
+    <h2 id="optTitle">選択肢</h2>
+    <div class="note">この項目（選択肢）の候補を自由に追加・削除できます。</div>
+    <div id="optList" style="margin:12px 0"></div>
+    <div class="mrow">
+      <input id="opt_add" placeholder="選択肢を追加" onkeydown="if(event.key==='Enter'){event.preventDefault();addOpt();}">
+      <button class="btn sm" onclick="addOpt()">追加</button>
+    </div>
+    <div class="modal-actions"><button class="btn" onclick="closeOptEditor()">閉じる</button></div>
+  </div>
+</div>
+
+<script>
+/* ============ データ層 ============ */
+const KEY='employeeMaster.v13';
+let DB;
+// 等級制度 L1〜L6（詳細給料テーブル）
+const GRADE_LIST=['L1','L2','L3','L4','L5','L6'];
+const GRADE_RANGE={
+  L1:{pos:'インストラクター（契約/パート）',min:1300,max:1300,hourly:true,note:'時給制・基礎（160時間養成）／昇格目安 —'},
+  L2:{pos:'一般社員/副店長',base:260000,min:260000,max:300000,note:'社員/店長候補登録／昇格目安1年'},
+  L3:{pos:'店長/マスタートレーナー',base:280000,min:280000,max:320000,note:'実技テスト合格／昇格目安2年'},
+  L4:{pos:'マネージャー/グランドMT',base:300000,min:300000,max:340000,note:'L3＋マネジメント研修了・養成56h／昇格目安2〜3年'},
+  L5:{pos:'SV/AM/運営MGR/シニアマネージャー',base:320000,min:320000,max:400000,note:'L4＋複数店舗実績／昇格目安2〜3年'},
+  L6:{pos:'統括事業部長/幹部/ディレクター',base:400000,min:400000,max:null,note:'経営層・事業責任'}
+};
+// 手当（月給に含む）の初期設定（編集時に表示・金額は編集可能）
+const DEFAULT_ALLOWANCES=[{name:'出張手当',amount:30000},{name:'役職手当',amount:10000}];
+// 会社マスタ初期値（拠点マスタで住所・連絡先・代表者を編集可能）
+const COMPANY_LIST=['repilates株式会社','ＣＡＳＡ ＣＯＬＯＲマーケティング株式会社','株式会社先進ランドリー研究所',
+  "NEXT Creation's株式会社",'株式会社フロンティア','株式会社クリエイト','株式会社LunaFit','株式会社ｆｌａｇ'];
+const TITLE_LIST=['店長','副店長','スタッフ','トレーナー','エリアマネージャー','本部スタッフ'];
+// 月次変更の「変更項目」と、項目ごとの「変更内容」候補（候補がない項目は自由入力）
+const CHANGE_ITEMS=['配属店舗','研修店舗','役職','等級','給与区分','基本給','手当','その他手当(補助)',
+  '雇用形態','雇用保険','社会保険','住所','氏名','その他'];
+function changeNoteOptions(item){
+  if(item==='配属店舗'||item==='研修店舗')return DB.settings.stores;
+  if(item==='等級')return DB.settings.grades;
+  if(item==='給与区分')return ['月給','時給'];
+  if(item==='雇用保険'||item==='社会保険')return ['加入','未加入'];
+  if(item==='雇用形態'){const f=DB.settings.onboardFields.find(x=>x.key==='type');return (f&&f.options)||['正社員','契約社員','パート・アルバイト','派遣','業務委託'];}
+  return null; // 自由入力
+}
+let isAdmin=false;
+let currentUser=null;
+
+// リピラティス所属店舗（管理者設定で手動編集も可能）
+const REPILATES_STORES=['池袋店','飯田橋神楽坂店','フレスポ若葉台店','アクロスモール八王子みなみ野店',
+  'イオンモール木更津店','サプラ龍ヶ崎店','イオンタウン吉川美南店','イオンタウン東浦和店',
+  'イオンタウン水戸南店','イオンタウン仙台泉大沢店','札幌円山店','イオンモール苫小牧店',
+  'カラフルタウン岐阜店','イオンモール富士宮店','イオンモール新瑞橋店','名古屋グローバルゲート店',
+  'エアポートウォーク名古屋店','イオン豊橋南店','イオンモール常滑店','イオン浜松西店',
+  'MEGAドン・キホーテUNY石和店','イオンタウン四日市泊店','日永カヨー店','マークイズ静岡店',
+  'イオンモール銚子店','イオンモール扶桑店','フォレオ大津一里山店','イオンモール高松店'];
+
+// 入職回答フォームの初期項目定義（core項目は削除不可・ラベルと必須は編集可）
+const FORM_GROUPS=['入職手続き','通勤経路','口座登録'];
+function defaultOnboardFields(){return [
+  // ① 入職手続き
+  {key:'sei',     label:'姓',               type:'text',  required:true,  core:true, group:'入職手続き'},
+  {key:'mei',     label:'名',               type:'text',  required:true,  core:true, group:'入職手続き'},
+  {key:'seiKana', label:'姓（フリガナ）',   type:'text',  required:false, core:true, group:'入職手続き'},
+  {key:'meiKana', label:'名（フリガナ）',   type:'text',  required:false, core:true, group:'入職手続き'},
+  {key:'birth',  label:'生年月日',         type:'date',  required:false, core:true, group:'入職手続き'},
+  {key:'tel',    label:'電話番号',         type:'tel',   required:false, core:true, group:'入職手続き'},
+  {key:'postal', label:'郵便番号',         type:'text',  required:false, core:true, group:'入職手続き'},
+  {key:'addr',   label:'住所',             type:'text',  required:false, core:true, group:'入職手続き'},
+  {key:'email',  label:'メール',           type:'email', required:false, core:true, group:'入職手続き'},
+  {key:'emgName',label:'緊急連絡先：氏名', type:'text',  required:false, core:true, group:'入職手続き'},
+  {key:'emgRel', label:'緊急連絡先：続柄', type:'text',  required:false, core:true, group:'入職手続き'},
+  {key:'emgTel', label:'緊急連絡先：電話', type:'tel',   required:false, core:true, group:'入職手続き'},
+  {key:'emgAddr',label:'緊急連絡先：住所', type:'text',  required:false, core:true, group:'入職手続き'},
+  {key:'store',     label:'配属店舗',      type:'select',source:'stores',required:false,core:true, group:'入職手続き'},
+  {key:'trainStore',label:'研修店舗',      type:'select',source:'stores',required:false,core:true, group:'入職手続き'},
+  {key:'hire',   label:'入社日',           type:'date',  required:true,  core:true, group:'入職手続き'},
+  {key:'type',   label:'雇用形態',         type:'select',options:['正社員','契約社員','パート・アルバイト','派遣','業務委託'],required:false,core:true, group:'入職手続き'},
+  // ② 通勤経路
+  {key:'commute',label:'通勤手段',         type:'select',options:['電車','バス','電車＋バス','自動車','自転車','徒歩'],required:false,core:true, group:'通勤経路'},
+  {key:'fare',   label:'定期代（月額・円）',type:'number',required:false, core:true, group:'通勤経路'},
+  {key:'route',  label:'通勤経路',         type:'text',  required:false, core:true, group:'通勤経路'},
+  // ③ 口座登録
+  {key:'bankHead',  label:'給与振込口座情報', type:'note',  required:false, core:true, group:'口座登録'},
+  {key:'bankFi',    label:'金融機関名',      type:'text',  required:true,  core:true, full:true, group:'口座登録'},
+  {key:'bankBranch',label:'支店名',          type:'text',  required:true,  core:true, full:true, group:'口座登録'},
+  {key:'bankType',  label:'口座種類',        type:'select',options:['普通','当座'], required:true, core:true, full:true, group:'口座登録'},
+  {key:'bankNo',    label:'口座番号',        type:'text',  required:true,  core:true, full:true, group:'口座登録'},
+  {key:'bankHolder',label:'口座名義（カナ）',type:'text',  required:true,  core:true, full:true, group:'口座登録'},
+  {key:'bankKana',  label:'※通帳やキャッシュカードに記載のとおり、全角カタカナで入力してください。', type:'note', required:false, core:true, group:'口座登録'},
+  {key:'bankYucho', label:'ゆうちょ銀行の場合：記号・番号', type:'text', required:false, core:true, full:true, group:'口座登録'},
+  {key:'bankRemark',label:'備考',            type:'textarea', required:false, core:true, full:true, group:'口座登録'},
+  {key:'bankProof', label:'通帳・WEB明細の添付（口座情報がわかるもの／画像・PDF）', type:'file', required:false, core:true, full:true, group:'口座登録'}
+];}
+
+DB=load();
+
+function load(){
+  const raw=localStorage.getItem(KEY);
+  if(raw){try{return migrate(JSON.parse(raw))}catch(e){}}
+  const seed=makeSeed();
+  localStorage.setItem(KEY,JSON.stringify(seed));
+  return seed;
+}
+function migrate(db){
+  db.settings=db.settings||{};
+  const s=db.settings;
+  s.companies=s.companies||COMPANY_LIST.slice();
+  s.companyDetails=s.companyDetails||{};
+  s.storeDetails=s.storeDetails||{};
+  s.listCols=s.listCols||null; // 一覧の列順・表示（null=既定）
+  s.titles=s.titles||TITLE_LIST.slice();
+  s.stores=s.stores||REPILATES_STORES.slice();
+  s.depts=s.depts||db.depts||['営業部','管理部'];
+  s.onboardFields=s.onboardFields||defaultOnboardFields();
+  s.grades=s.grades||GRADE_LIST.slice();
+  s.gradeRange=s.gradeRange||JSON.parse(JSON.stringify(GRADE_RANGE));
+  s.adminPass=s.adminPass||'admin';
+  s.users=s.users||[
+    {loginId:'admin',name:'管理者',role:'admin',pass:s.adminPass||'admin'},
+    {loginId:'user',name:'一般ユーザー',role:'general',pass:'user'}];
+  return db;
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB))}
+
+function makeSeed(){
+  const companies=COMPANY_LIST.slice();
+  const companyDetails={};
+  const stores=REPILATES_STORES.slice();
+  const depts=['営業部','管理部','製造部','開発部','カスタマーサポート'];
+  const grades=GRADE_LIST.slice();
+  const gradeRange=JSON.parse(JSON.stringify(GRADE_RANGE));
+  const types=['正社員','正社員','正社員','契約社員','パート・アルバイト'];
+  const titles=TITLE_LIST.slice();
+  const rels=['配偶者','親','兄弟姉妹','子'];
+  const names=[['佐藤 健','サトウ ケン','男性'],['鈴木 美咲','スズキ ミサキ','女性'],
+    ['高橋 大輔','タカハシ ダイスケ','男性'],['田中 由美','タナカ ユミ','女性'],
+    ['伊藤 翔','イトウ ショウ','男性'],['渡辺 彩','ワタナベ アヤ','女性'],
+    ['山本 拓也','ヤマモト タクヤ','男性'],['中村 葵','ナカムラ アオイ','女性'],
+    ['小林 誠','コバヤシ マコト','男性'],['加藤 七海','カトウ ナナミ','女性'],
+    ['吉田 亮','ヨシダ リョウ','男性'],['山田 桜','ヤマダ サクラ','女性'],
+    ['佐々木 一郎','ササキ イチロウ','男性'],['松本 麻衣','マツモト マイ','女性'],
+    ['井上 健太','イノウエ ケンタ','男性'],['木村 千夏','キムラ チナツ','女性'],
+    ['林 大輔','ハヤシ ダイスケ','男性'],['清水 莉子','シミズ リコ','女性']];
+  const list=[];
+  let n=1001;
+  names.forEach((nm,i)=>{
+    const hireYear=2014+ (i%11);
+    const hireMonth=(i*3)%12+1;
+    const birthYear=1972+ (i*2)%32;
+    let status='在職', sdate='';
+    if(i===2){status='退職';sdate='2024-03-31';}
+    if(i===6){status='退職';sdate='2023-09-30';}
+    if(i===11){status='退職';sdate='2025-12-15';}
+    if(i===5){status='産休・育休';sdate='2025-04-01';}
+    if(i===15){status='産休・育休';sdate='2026-01-10';}
+    list.push({
+      id:'E'+n, code:String(n), name:nm[0], kana:nm[1], gender:nm[2],
+      birth:`${birthYear}-${String((i%12)+1).padStart(2,'0')}-${String((i%27)+1).padStart(2,'0')}`,
+      tel:'090-0000-'+String(1000+i), postal:'1'+String(60000+i*7).slice(0,2)+'-00'+String(10+i%80).slice(0,2),
+      addr:'東京都〇〇区サンプル町'+(i+1)+'-'+(i+2),
+      email:`emp${n}@example.com`,
+      emgName:'家族 '+nm[0].split(' ')[0], emgRel:rels[i%rels.length],
+      emgTel:'090-1111-'+String(2000+i), emgAddr:'同上',
+      mynum:'****-****-****', pension:'1234-56789'+i, emp_ins:'5000-'+String(100000+i),
+      bank:'〇〇銀行 △△支店 普通 12345'+i,
+      company:companies[0], store:stores[i%stores.length], trainStore:stores[(i+1)%stores.length],
+      managedStores:(i%6===0)?[stores[i%stores.length]]:(i%6===4)?[stores[i%stores.length],stores[(i+5)%stores.length],stores[(i+9)%stores.length]]:[],
+      dept:depts[i%depts.length], title:titles[i%titles.length], grade:grades[i%grades.length],
+      type:types[i%types.length],
+      hire:`${hireYear}-${String(hireMonth).padStart(2,'0')}-01`,
+      payType:(i%6===0)?'時給':'月給',
+      salary:(i%6===0)?1300:gradeRange[grades[i%grades.length]].base,
+      hourlyPremium:(i%6===0)?1350:0,
+      trainingStatus:(i%6===1)?'研修中':'対象外',
+      salaryDate:`${hireYear}-${String(hireMonth).padStart(2,'0')}-01`,
+      allowances:[{name:'出張手当',amount:30000,date:''},{name:'役職手当',amount:10000,date:''}],
+      benefits:(i%2===0)?[{name:'家賃補助',amount:20000,date:''}]:[],
+      empIns:(i%6===0)?'未加入':'加入', socialIns:(i%6===0)?'未加入':'加入',
+      salaryHistory:[],
+      commute:['電車','バス','自動車','自転車','徒歩'][i%5], fare:6000+(i%5)*4500,
+      route:'最寄駅 → 店舗前 徒歩'+(5+i%10)+'分',
+      status, statusDate:sdate,
+      onboard: i>=16?'未回答':'回答済み',
+      history:[{date:'2024-04-01',field:'登録',note:'マスター初期登録'}]
+    });
+    n++;
+  });
+  const users=[{loginId:'admin',name:'管理者',role:'admin',pass:'admin'},
+    {loginId:'user',name:'一般ユーザー',role:'general',pass:'user'}];
+  companyDetails['repilates株式会社']={postal:'171-0021',address:'東京都豊島区西池袋3-22-9 パークアクシス池袋1F',
+    tel:'03-0000-0000',rep:'代表取締役 山田 太郎',note:'マシン専門ピラティススタジオ'};
+  const storeDetails={};
+  storeDetails['池袋店']={postal:'171-0021',address:'東京都豊島区西池袋3-22-9 パークアクシス池袋1F',tel:'03-1111-1111',manager:'店長 佐藤 健'};
+  storeDetails['飯田橋神楽坂店']={postal:'162-0822',address:'東京都新宿区下宮比町1-4 飯田橋ビルB1F',tel:'03-2222-2222',manager:''};
+  return {employees:list, settings:{companies,companyDetails,storeDetails,listCols:null,titles:TITLE_LIST.slice(),
+    stores,depts,grades,gradeRange,users,onboardFields:defaultOnboardFields(),adminPass:'admin'}};
+}
+
+/* ============ 共通ユーティリティ ============ */
+const $=id=>document.getElementById(id);
+function fmtYen(v){return v?'¥'+Number(v).toLocaleString():'-'}
+function ageFrom(b){if(!b)return null;const d=new Date(b),t=new Date();
+  let a=t.getFullYear()-d.getFullYear();if(t<new Date(t.getFullYear(),d.getMonth(),d.getDate()))a--;return a}
+function tenureYears(hire,status,sdate){
+  if(!hire)return 0;const start=new Date(hire);
+  const end=(status==='退職'&&sdate)?new Date(sdate):new Date();
+  return Math.max(0,(end-start)/(365.25*24*3600*1000));
+}
+function statusBadge(s){
+  const m={'在職':'b-active','退職':'b-retired','産休・育休':'b-leave'};
+  return `<span class="badge ${m[s]||''}">${s}</span>`;
+}
+function trainingBadge(t){
+  // 研修中の人だけ表示（研修終了などは表示しない）
+  return (t==='研修中')?'<span class="badge b-train">研修中</span>':'';
+}
+function optionsHtml(arr,sel){
+  return ['<option value="">-</option>'].concat(arr.map(v=>`<option ${v===sel?'selected':''}>${v}</option>`)).join('');
+}
+function escapeHtml(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function updateAge(){
+  const a=ageFrom($('f_birth').value);
+  $('f_age').textContent=(a==null)?'':`（${a}歳）`;
+}
+
+/* ============ タブ切替 ============ */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');$(b.dataset.tab).classList.add('active');
+  if(b.dataset.tab==='dash')renderDash();
+  if(b.dataset.tab==='admin')renderAdmin();
+  if(b.dataset.tab==='stores')renderStores();
+  if(b.dataset.tab==='locations')renderLocations();
+});
+
+/* ===== 編集モーダルのタブ（クリック＋ホバーで切替） ===== */
+function switchModalTab(p){
+  document.querySelectorAll('#empTabs .mtab').forEach(t=>t.classList.toggle('on',t.dataset.p===p));
+  document.querySelectorAll('#overlay .mpanel').forEach(pn=>pn.classList.toggle('on',pn.dataset.panel===p));
+}
+document.querySelectorAll('#empTabs .mtab').forEach(t=>{
+  t.onclick=()=>switchModalTab(t.dataset.p);
+});
+
+/* ===== 店舗別人数 ===== */
+function renderStores(){
+  const tb=$('storeCounts');
+  const counts={};
+  DB.employees.filter(e=>e.status!=='退職').forEach(e=>{
+    const s=e.store||'（未設定）'; counts[s]=(counts[s]||0)+1;
+  });
+  const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const max=rows.length?rows[0][1]:1;
+  tb.innerHTML=rows.length?rows.map(([s,c])=>`<tr><td>${escapeHtml(s)}</td><td><b>${c}</b> 名</td>
+    <td><div class="storebar" style="width:${Math.round(c/max*100)}%"></div></td></tr>`).join('')
+    :'<tr><td colspan="3" class="muted" style="font-size:12px">データがありません</td></tr>';
+}
+
+/* ===== 拠点マスタ（会社情報） ===== */
+let locEditMode=false;
+function toggleLocEdit(){if(!isAdmin)return;locEditMode=!locEditMode;renderLocations();}
+function renderLocations(){
+  const canEdit=isAdmin&&locEditMode;
+  const ro=canEdit?'':'disabled';
+  const det=DB.settings.companyDetails||{};
+  $('locationRows').innerHTML=DB.settings.companies.map((name,i)=>{
+    const d=det[name]||{};
+    const inp=(k,ph,w)=>`<input value="${escapeHtml(d[k]||'')}" placeholder="${ph}" style="width:${w}" ${ro}
+      onchange="setCompanyDetail(${i},'${k}',this.value)">`;
+    return `<tr><td><b>${escapeHtml(name)}</b></td>
+      <td>${inp('postal','〒','90px')}</td>
+      <td>${inp('address','住所','200px')}</td>
+      <td>${inp('tel','連絡先','120px')}</td>
+      <td>${inp('rep','代表者','120px')}</td>
+      <td>${inp('note','備考','140px')}</td>
+      <td>${canEdit?`<button class="btn ghost sm danger" onclick="delCompany(${i})">×</button>`:''}</td></tr>`;
+  }).join('')||'<tr><td colspan="7" class="muted" style="font-size:12px">会社が登録されていません</td></tr>';
+  // 店舗住所録
+  const sdet=DB.settings.storeDetails||{};
+  $('storeAddrRows').innerHTML=DB.settings.stores.map((name,i)=>{
+    const d=sdet[name]||{};
+    const inp=(k,ph,w)=>`<input value="${escapeHtml(d[k]||'')}" placeholder="${ph}" style="width:${w}" ${ro}
+      onchange="setStoreDetail(${i},'${k}',this.value)">`;
+    return `<tr><td><b>${escapeHtml(name)}</b></td>
+      <td>${inp('postal','〒','90px')}</td>
+      <td>${inp('address','住所','240px')}</td>
+      <td>${inp('tel','連絡先','130px')}</td>
+      <td>${inp('manager','店長','130px')}</td></tr>`;
+  }).join('')||'<tr><td colspan="5" class="muted" style="font-size:12px">店舗が登録されていません</td></tr>';
+  // 編集ボタン・追加行の表示制御
+  $('locEditBtn').style.display=isAdmin?'inline-block':'none';
+  $('locEditBtn').textContent=locEditMode?'編集を終了':'編集する';
+  $('locAddRow').style.display=canEdit?'flex':'none';
+}
+function setStoreDetail(i,k,v){
+  const name=DB.settings.stores[i];if(!name)return;
+  DB.settings.storeDetails=DB.settings.storeDetails||{};
+  DB.settings.storeDetails[name]=DB.settings.storeDetails[name]||{};
+  DB.settings.storeDetails[name][k]=v;save();
+}
+function setCompanyDetail(i,k,v){
+  const name=DB.settings.companies[i];if(!name)return;
+  DB.settings.companyDetails=DB.settings.companyDetails||{};
+  DB.settings.companyDetails[name]=DB.settings.companyDetails[name]||{};
+  DB.settings.companyDetails[name][k]=v;save();
+}
+function addCompany(){
+  if(!isAdmin){alert('追加は管理者のみ可能です');return;}
+  const name=$('loc_name').value.trim();
+  if(!name){alert('会社名を入力してください');return;}
+  if(DB.settings.companies.includes(name)){alert('既に登録されています');return;}
+  DB.settings.companies.push(name);
+  DB.settings.companyDetails=DB.settings.companyDetails||{};
+  DB.settings.companyDetails[name]={postal:$('loc_postal').value.trim(),address:$('loc_address').value.trim(),
+    tel:$('loc_tel').value.trim(),rep:$('loc_rep').value.trim(),note:''};
+  ['loc_name','loc_postal','loc_address','loc_tel','loc_rep'].forEach(i=>$(i).value='');
+  save();renderLocations();refreshCompanyLabel();
+}
+function delCompany(i){
+  const name=DB.settings.companies[i];if(!name)return;
+  if(DB.employees.some(e=>e.company===name)){alert(`「${name}」は従業員データで使用中のため削除できません。`);return;}
+  if(!confirm(`会社「${name}」を削除しますか？`))return;
+  DB.settings.companies.splice(i,1);
+  if(DB.settings.companyDetails)delete DB.settings.companyDetails[name];
+  save();renderLocations();refreshCompanyLabel();
+}
+
+/* ============ 一覧描画 ============ */
+let curFilter='all';
+$('statusFilter').querySelectorAll('.filterchip').forEach(c=>c.onclick=()=>{
+  $('statusFilter').querySelectorAll('.filterchip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on');curFilter=c.dataset.f;renderList();
+});
+$('search').oninput=renderList;
+
+// 列定義 {label, render(行HTML), sort(並べ替え用の値)}
+const tenureOf=e=>tenureYears(e.hire,e.status,e.statusDate);
+const ageOf=e=>{const a=ageFrom(e.birth);return a==null?-1:a;};
+const COLS_ADMIN=[
+  {key:'company',label:'会社名',render:e=>e.company||'-',sort:e=>e.company||''},
+  {key:'code',label:'社員番号',render:e=>e.code,sort:e=>Number(e.code)||0},
+  {key:'name',label:'氏名',render:e=>`<b>${e.name}</b>${e.trainingStatus==='研修中'?' '+trainingBadge('研修中'):''}`,sort:e=>e.kana||e.name||''},
+  {key:'age',label:'年齢',render:e=>{const a=ageFrom(e.birth);return a==null?'-':a+'歳';},sort:ageOf},
+  {key:'store',label:'配属店舗',render:e=>e.store||'-',sort:e=>e.store||''},
+  {key:'managed',label:'担当店舗',render:e=>(e.managedStores&&e.managedStores.length)?e.managedStores.join('、'):'-',sort:e=>(e.managedStores||[]).join(',')},
+  {key:'title',label:'役職',render:e=>e.title||'-',sort:e=>e.title||''},
+  {key:'grade',label:'等級',render:e=>e.grade||'-',sort:e=>e.grade||''},
+  {key:'type',label:'雇用形態',render:e=>e.type||'-',sort:e=>e.type||''},
+  {key:'socialIns',label:'社会保険',render:e=>e.socialIns||'-',sort:e=>e.socialIns||''},
+  {key:'hire',label:'入社日',render:e=>e.hire||'-',sort:e=>e.hire||''},
+  {key:'tenure',label:'勤続',render:e=>tenureOf(e).toFixed(1)+'年',sort:tenureOf},
+  {key:'status',label:'ステータス',render:e=>statusBadge(e.status),sort:e=>e.status||''},
+  {key:'onboard',label:'入職手続き',render:e=>`<span class="badge ${e.onboard==='回答済み'?'b-ok':'b-pend'}">${e.onboard}</span>`,sort:e=>e.onboard||''}];
+// 一覧の既定表示列（他の項目は「表示項目」で切替）
+const DEFAULT_VISIBLE_COLS=['company','code','name','store','title','type','status'];
+function defaultListCols(){
+  const out=DEFAULT_VISIBLE_COLS.map(k=>({key:k,visible:true}));
+  COLS_ADMIN.forEach(c=>{if(!DEFAULT_VISIBLE_COLS.includes(c.key))out.push({key:c.key,visible:false});});
+  return out;
+}
+// 管理者一覧の列を設定（settings.listCols）に従って並べ替え・絞り込み
+function getAdminCols(){
+  const lc=(DB.settings.listCols&&DB.settings.listCols.length)?DB.settings.listCols:defaultListCols();
+  const byKey={};COLS_ADMIN.forEach(c=>byKey[c.key]=c);
+  const ordered=lc.filter(x=>x.visible&&byKey[x.key]).map(x=>byKey[x.key]);
+  COLS_ADMIN.forEach(c=>{if(!lc.some(x=>x.key===c.key))ordered.push(c);});
+  return ordered.length?ordered:COLS_ADMIN;
+}
+const COLS_GENERAL=[
+  {label:'会社名',render:e=>e.company||'-',sort:e=>e.company||''},
+  {label:'配属店舗',render:e=>e.store||'-',sort:e=>e.store||''},
+  {label:'氏名',render:e=>`<b>${e.name}</b>`,sort:e=>e.kana||e.name||''},
+  {label:'役職',render:e=>e.title||'-',sort:e=>e.title||''},
+  {label:'入社日',render:e=>e.hire||'-',sort:e=>e.hire||''},
+  {label:'退職日',render:e=>e.status==='退職'?(e.statusDate||'-'):'-',sort:e=>e.statusDate||''},
+  {label:'在籍状況',render:e=>statusBadge(e.status),sort:e=>e.status||''}];
+
+let sortIdx=null, sortDir=1;
+function sortBy(i){ if(sortIdx===i)sortDir=-sortDir; else{sortIdx=i;sortDir=1;} renderList(); }
+function renderList(){
+  const q=$('search').value.trim().toLowerCase();
+  const cols=isAdmin?getAdminCols():COLS_GENERAL;
+  let rows=DB.employees.filter(e=>{
+    if(isAdmin && curFilter!=='all'&&e.status!==curFilter)return false;
+    if(q&&!((e.name||'').toLowerCase().includes(q)||(e.title||'').toLowerCase().includes(q)
+        ||(e.store||'').toLowerCase().includes(q)||(e.company||'').toLowerCase().includes(q)
+        ||(e.code||'').includes(q)))return false;
+    return true;
+  });
+  if(sortIdx!=null && sortIdx<cols.length){
+    const sf=cols[sortIdx].sort;
+    rows=rows.slice().sort((a,b)=>{
+      const x=sf(a),y=sf(b);
+      const c=(typeof x==='number'&&typeof y==='number')?(x-y):String(x).localeCompare(String(y),'ja');
+      return c*sortDir;
+    });
+  }
+  $('empHead').innerHTML='<tr>'+cols.map((c,i)=>{
+    const ind=(sortIdx===i)?(sortDir>0?' ▲':' ▼'):'';
+    return `<th style="cursor:pointer;user-select:none" onclick="sortBy(${i})">${c.label}${ind}</th>`;
+  }).join('')+'</tr>';
+  const tb=$('empRows');tb.innerHTML='';
+  rows.forEach(e=>{
+    const tr=document.createElement('tr');
+    tr.onclick=()=>isAdmin?openEditor(e.id):openViewer(e.id);
+    tr.innerHTML=cols.map(c=>`<td>${c.render(e)}</td>`).join('');
+    tb.appendChild(tr);
+  });
+  $('emptyMsg').style.display=rows.length?'none':'block';
+}
+/* ===== 閲覧モーダル（一般ユーザー用：4項目のみ） ===== */
+function openViewer(id){
+  const e=DB.employees.find(x=>x.id===id);if(!e)return;
+  $('v_title').textContent=e.name+' さんの情報';
+  $('v_company').textContent=e.company||'-';
+  $('v_dept').textContent=e.store||'-';
+  $('v_name').textContent=e.name||'-';
+  $('v_title2').textContent=e.title||'-';
+  $('v_hire').textContent=e.hire||'-';
+  $('v_retire').textContent=e.status==='退職'?(e.statusDate||'-'):'-';
+  $('v_status').innerHTML=statusBadge(e.status);
+  $('viewOverlay').classList.add('show');
+}
+function closeView(){$('viewOverlay').classList.remove('show')}
+
+/* ============ 入職手続きタブ ============ */
+function renderOnboard(){
+  const tb=$('onboardRows');tb.innerHTML='';
+  const targets=DB.employees.filter(e=>e.status!=='退職')
+    .sort((a,b)=>(a.onboard===b.onboard)?0:(a.onboard==='未回答'?-1:1));
+  targets.forEach(e=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${e.code}</td><td>${e.name}</td><td>${e.store||'-'}</td><td>${e.hire}</td>
+      <td><span class="badge ${e.onboard==='回答済み'?'b-ok':'b-pend'}">${e.onboard}</span></td>
+      <td>${(e.onboard==='未回答'&&isAdmin)?'<button class="btn sm" onclick="markAnswered(\''+e.id+'\')">回答済みにする</button>':'<button class="btn ghost sm" onclick="openEditor(\''+e.id+'\')">詳細</button>'}</td>`;
+    tb.appendChild(tr);
+  });
+  $('onboardEmpty').style.display=targets.length?'none':'block';
+}
+function markAnswered(id){
+  if(!isAdmin){alert('この操作は管理者のみ可能です');return;}
+  const e=DB.employees.find(x=>x.id===id);if(!e)return;
+  e.onboard='回答済み';
+  e.history.push({date:new Date().toISOString().slice(0,10),field:'入職手続き',note:'回答済みに更新'});
+  save();renderOnboard();renderList();
+}
+
+/* ============ 編集モーダル ============ */
+let editing=null, draftHistory=[], editMode=false, editorBaseTitle='';
+function openEditor(id){
+  if(!id && !isAdmin){alert('従業員の追加は管理者のみ可能です。閲覧は一覧の各行をクリックしてください。');return;}
+  const e=id?DB.employees.find(x=>x.id===id):null;
+  editing=e?id:null;
+  editMode=!e;            // 新規は編集モード、既存は閲覧モードで開く
+  editorBaseTitle=e?`${e.name} さんの情報`:'従業員を追加';
+  const g=(k,d='')=>e?(e[k]??d):d;
+  // マスタ連動セレクト
+  $('f_company').innerHTML=optionsHtml(DB.settings.companies,g('company'));
+  $('f_store').innerHTML=optionsHtml(DB.settings.stores,g('store'));
+  $('f_trainStore').innerHTML=optionsHtml(DB.settings.stores,g('trainStore'));
+  $('f_title').innerHTML=optionsHtml(DB.settings.titles,g('title'));
+  $('f_grade').innerHTML=optionsHtml(DB.settings.grades,g('grade'));
+  $('f_id').value=e?e.id:'';
+  $('f_code').value=g('code');$('f_name').value=g('name');$('f_kana').value=g('kana');
+  $('f_gender').value=g('gender');$('f_birth').value=g('birth');$('f_tel').value=g('tel');
+  $('f_postal').value=g('postal');$('f_addr').value=g('addr');$('f_email').value=g('email');
+  $('f_emgName').value=g('emgName');$('f_emgRel').value=g('emgRel');
+  $('f_emgTel').value=g('emgTel');$('f_emgAddr').value=g('emgAddr');
+  $('f_mynum').value=g('mynum');$('f_pension').value=g('pension');$('f_emp_ins').value=g('emp_ins');
+  $('f_bank').value=g('bank');$('f_title').value=g('title');
+  $('f_type').value=g('type','正社員');$('f_hire').value=g('hire');
+  $('f_payType').value=g('payType','月給');
+  $('f_training').value=g('trainingStatus','対象外');
+  $('f_salary').value=g('salary');$('f_hourlyPremium').value=g('hourlyPremium',0);$('f_hourlyPreset').value='';
+  $('f_salaryDate').value=g('salaryDate');
+  $('f_empIns').value=g('empIns','加入');$('f_socialIns').value=g('socialIns','加入');
+  $('f_commute').value=g('commute','電車');$('f_fare').value=g('fare');
+  $('f_route').value=g('route');$('f_status').value=g('status','在職');$('f_statusDate').value=g('statusDate');
+  $('f_onboard').value=g('onboard','回答済み');
+  // company未設定（新規）は先頭会社を既定に
+  if(!e&&DB.settings.companies[0])$('f_company').value=DB.settings.companies[0];
+  draftManaged=e?JSON.parse(JSON.stringify(e.managedStores||[])):[];
+  $('managed_pick').innerHTML=optionsHtml(DB.settings.stores,'');
+  draftBankProof=e?(e.bankProof||null):null;$('f_bankProofFile').value='';
+  DOC_DRAFTS.consent=e?(e.consentDoc||null):null;$('f_consentFile').value='';
+  draftContracts=e?JSON.parse(JSON.stringify(e.contracts||(e.contractDoc?[Object.assign({date:''},e.contractDoc)]:[]))):[];
+  draftContractLog=e?JSON.parse(JSON.stringify(e.contractLog||[])):[];
+  $('f_contractFile').value='';
+  draftAllow=e?JSON.parse(JSON.stringify(e.allowances||[])):DEFAULT_ALLOWANCES.map(a=>({name:a.name,amount:a.amount,date:''}));
+  draftBenefit=e?JSON.parse(JSON.stringify(e.benefits||[])):[];
+  draftSalaryHist=e?JSON.parse(JSON.stringify(e.salaryHistory||[])):[];
+  draftHistory=e?JSON.parse(JSON.stringify(e.history||[])):[];
+  setupChangeFields();$('c_date').value='';
+  renderCustomBox(e);renderManaged();renderBankProofView();renderContracts();renderContractLog();renderDocView('consent');renderAllowances();renderBenefits();renderSalaryHist();updateAge();
+  toggleStatusDate();renderHistory();onPayTypeChange(true);setEditorMode();switchModalTab('basic');
+  $('overlay').classList.add('show');
+}
+function renderCustomBox(e){
+  const cust=(e&&e.custom)||{};
+  const keys=Object.keys(cust);
+  $('customWrap').style.display=keys.length?'block':'none';
+  $('customBox').innerHTML=keys.map(k=>
+    `<div class="field"><label>${cust[k].label||k}</label>
+       <input id="cf_${k}" value="${(cust[k].value||'').replace(/"/g,'&quot;')}"></div>`).join('');
+}
+function setEditorMode(){
+  const ro=!editMode;    // 閲覧モードは入力不可
+  $('empForm').querySelectorAll('input,select,textarea').forEach(el=>el.disabled=ro);
+  // パネル内の追加/削除ボタンも閲覧モードでは無効化（タブ・操作ボタンは除外）
+  $('empForm').querySelectorAll('button').forEach(b=>{
+    if(b.closest('#empTabs')||b.closest('.modal-actions'))return; b.disabled=ro;});
+  $('changeSection').style.display=ro?'none':'block';
+  $('editBtn').style.display=ro?'inline-block':'none';
+  $('saveBtn').style.display=ro?'none':'inline-block';
+  $('delBtn').style.display=(ro||!editing)?'none':'inline-block';
+  $('closeBtn').textContent=ro?'閉じる':'キャンセル';
+  $('modalTitle').textContent=editorBaseTitle+(ro?'（閲覧）':'（編集中）');
+}
+function enableEdit(){if(!isAdmin)return;editMode=true;setEditorMode();}
+function onPayTypeChange(keep){
+  const monthly=$('f_payType').value==='月給';
+  $('f_salaryLabel').textContent=monthly?'基本給（月額・円）':'時給（平日・円）';
+  $('hourlyPresetWrap').style.display=monthly?'none':'flex';
+  $('hourlyPremiumWrap').style.display=monthly?'none':'flex';
+  onGradeChange(keep);
+  updatePayTotal();
+}
+function applyHourlyPreset(){
+  if($('f_hourlyPreset').value==='trainee'){
+    $('f_salary').value=1300;$('f_hourlyPremium').value=1350;updatePayTotal();
+  }
+}
+function gradeBase(g){const r=(DB.settings.gradeRange||{})[g];if(!r)return null;return r.base!=null?r.base:(r.min!=null?r.min:null);}
+function onGradeChange(keep){
+  const g=$('f_grade').value;
+  const r=(DB.settings.gradeRange||{})[g];
+  const monthly=$('f_payType').value==='月給';
+  const hint=$('gradeHint');
+  const posTxt=(r&&r.pos)?`【${r.pos}】 `:'';
+  if(g&&r&&monthly&&(r.min!=null||r.max!=null||r.base!=null)){
+    const base=gradeBase(g);
+    hint.textContent=`${posTxt}${g}：月給基準額 ${base!=null?'¥'+Number(base).toLocaleString():'—'}`+
+      `（レンジ ${r.min!=null?'¥'+Number(r.min).toLocaleString():'—'}〜${r.max!=null?'¥'+Number(r.max).toLocaleString():'—'}）`;
+    // 月給者は等級の基準額を基本給へ反映
+    if(!keep && base!=null)$('f_salary').value=base;
+  }else if(!monthly){
+    hint.textContent=`${posTxt}時給制（等級の月給基準額は適用されません）`;
+  }else hint.textContent=posTxt;
+  updatePayTotal();
+}
+function sumList(arr){return (arr||[]).reduce((s,a)=>s+(Number(a.amount)||0),0);}
+function updatePayTotal(){
+  const monthly=$('f_payType').value==='月給';
+  const base=Number($('f_salary').value)||0;
+  const premium=Number($('f_hourlyPremium').value)||0;
+  const allow=sumList(draftAllow);       // 月給に含む手当
+  const benefit=sumList(draftBenefit);   // 月給に含まない手当・補助
+  const monthlyPay=base+allow;
+  const yen=v=>'¥'+Number(v).toLocaleString();
+  const dateRaw=$('f_salaryDate').value;
+  const dateTxt=dateRaw?`適用日：${dateRaw.replace(/-/g,'/')}`:'適用日：未設定';
+  // 月給に含む手当の内訳
+  const breakdown=draftAllow.filter(a=>a.name||a.amount)
+    .map(a=>`<span style="display:inline-block;margin-right:10px">${escapeHtml(a.name||'手当')} ${yen(a.amount||0)}</span>`).join('');
+  if(monthly){
+    $('paySummary').innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:13px;color:var(--muted)">月給（基本給＋手当）</span>
+        <span style="font-size:12px;color:var(--muted)">${dateTxt}</span></div>
+      <div style="font-size:26px;font-weight:700;color:var(--brand-d);margin:2px 0 8px">${yen(monthlyPay)}</div>
+      <div style="font-size:12px;line-height:1.9">
+        内訳：基本給 <b>${yen(base)}</b>${breakdown?'　＋　'+breakdown:'　（手当なし）'}<br>
+        その他手当・補助（月給に含まない）：${yen(benefit)}　／　支給総額：${yen(monthlyPay+benefit)}</div>`;
+  }else{
+    $('paySummary').innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:13px;color:var(--muted)">時給</span>
+        <span style="font-size:12px;color:var(--muted)">${dateTxt}</span></div>
+      <div style="font-size:22px;font-weight:700;color:var(--brand-d);margin:2px 0 8px">平日 ${yen(base)}${premium?`　／　土日・深夜 ${yen(premium)}`:''}</div>
+      <div style="font-size:12px;line-height:1.9">
+        手当（月額）：${yen(allow)}${breakdown?'（'+breakdown.replace(/<[^>]+>/g,'')+'）':''}　／　その他手当・補助：${yen(benefit)}<br>
+        <span class="muted">※時給制のため月給の自動計算は行いません。</span></div>`;
+  }
+}
+/* ----- 担当店舗（複数） ----- */
+let draftManaged=[];
+function renderManaged(){
+  $('managedBox').innerHTML=draftManaged.length?draftManaged.map((s,i)=>
+    `<span class="mtag">${escapeHtml(s)}<button type="button" onclick="delManaged(${i})" title="削除">×</button></span>`).join('')
+    :'<span class="muted" style="font-size:12px">担当店舗なし</span>';
+}
+function addManaged(){
+  const s=$('managed_pick').value;
+  if(!s)return;
+  if(draftManaged.includes(s)){alert('既に追加されています');return;}
+  draftManaged.push(s);renderManaged();
+}
+function delManaged(i){draftManaged.splice(i,1);renderManaged();}
+/* ----- 通帳・WEB明細の添付 ----- */
+let draftBankProof=null;
+function renderBankProofView(){
+  const p=draftBankProof;
+  if(!p){$('bankProofView').innerHTML='<span class="muted" style="font-size:12px">添付なし</span>';return;}
+  const isImg=(p.type||'').startsWith('image/');
+  $('bankProofView').innerHTML=
+    (isImg?`<img src="${p.data}" style="max-width:220px;max-height:160px;border:1px solid var(--line);border-radius:8px;display:block;margin-bottom:4px">`:'')
+    +`<a href="${p.data}" download="${escapeHtml(p.name)}" target="_blank">${escapeHtml(p.name)} を開く/保存</a>`
+    +(editMode?` <button type="button" class="btn ghost sm danger" onclick="draftBankProof=null;renderBankProofView()">削除</button>`:'');
+}
+function onEditorBankProof(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  if(file.size>4*1024*1024){alert('ファイルサイズが大きすぎます（4MBまで）。');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=()=>{draftBankProof={name:file.name,type:file.type,data:reader.result};renderBankProofView();};
+  reader.readAsDataURL(file);
+}
+/* ----- 契約書・同意書などのPDF添付（汎用） ----- */
+const DOC_DRAFTS={}; // {contract, consent}
+function onPickDoc(input,key){
+  const file=input.files&&input.files[0];if(!file)return;
+  if(file.size>5*1024*1024){alert('ファイルサイズが大きすぎます（5MBまで）。');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=()=>{DOC_DRAFTS[key]={name:file.name,type:file.type,data:reader.result};renderDocView(key);};
+  reader.readAsDataURL(file);
+}
+function renderDocView(key){
+  const el=$('docview_'+key);if(!el)return;
+  const p=DOC_DRAFTS[key];
+  if(!p){el.innerHTML='<span class="muted" style="font-size:12px">添付なし</span>';return;}
+  const isImg=(p.type||'').startsWith('image/');
+  el.innerHTML=(isImg?`<img src="${p.data}" style="max-width:220px;max-height:160px;border:1px solid var(--line);border-radius:8px;display:block;margin-bottom:4px">`:'📄 ')
+    +`<a href="${p.data}" download="${escapeHtml(p.name)}" target="_blank">${escapeHtml(p.name)} を開く/保存</a>`
+    +(editMode?` <button type="button" class="btn ghost sm danger" onclick="DOC_DRAFTS['${key}']=null;renderDocView('${key}')">削除</button>`:'');
+}
+/* ----- 雇用契約書（複数・変更歴つき） ----- */
+let draftContracts=[], draftContractLog=[];
+function renderContracts(){
+  const box=$('contractsBox');
+  box.innerHTML=draftContracts.length?draftContracts.map((p,i)=>{
+    const isImg=(p.type||'').startsWith('image/');
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px">
+      <span>${isImg?'🖼':'📄'} <a href="${p.data}" download="${escapeHtml(p.name)}" target="_blank">${escapeHtml(p.name)}</a></span>
+      <span class="muted" style="font-size:11px">${p.date||''}</span>
+      ${editMode?`<button type="button" class="btn ghost sm danger" onclick="delContract(${i})">削除</button>`:''}
+    </div>`;
+  }).join(''):'<span class="muted" style="font-size:12px">契約書はありません</span>';
+}
+function renderContractLog(){
+  const box=$('contractLogBox');
+  if(!draftContractLog.length){box.innerHTML='<div class="muted" style="font-size:12px">変更歴はありません</div>';return;}
+  box.innerHTML=draftContractLog.slice().reverse().map(h=>
+    `<div class="h-item"><span class="h-date">${h.date||'-'}</span> ｜ 契約書を<b>${h.action}</b>：${escapeHtml(h.name)}</div>`).join('');
+}
+function onContractPick(input){
+  const files=[...(input.files||[])];if(!files.length)return;
+  const today=new Date().toISOString().slice(0,10);
+  let pending=files.length;
+  const done=()=>{if(--pending===0){renderContracts();renderContractLog();}};
+  files.forEach(file=>{
+    if(file.size>5*1024*1024){alert(`「${file.name}」はサイズが大きすぎます（5MBまで）。`);done();return;}
+    const reader=new FileReader();
+    reader.onload=()=>{draftContracts.push({name:file.name,type:file.type,data:reader.result,date:today});
+      draftContractLog.push({date:today,action:'追加',name:file.name});done();};
+    reader.readAsDataURL(file);
+  });
+  input.value='';
+}
+function delContract(i){
+  const p=draftContracts[i];if(!p)return;
+  draftContracts.splice(i,1);
+  draftContractLog.push({date:new Date().toISOString().slice(0,10),action:'削除',name:p.name});
+  renderContracts();renderContractLog();
+}
+/* ----- 手当（月給に含む） ----- */
+let draftAllow=[], draftBenefit=[], draftSalaryHist=[];
+function allowRowHtml(arr,name,i){
+  return `<div class="changewrap" style="grid-template-columns:1.3fr 1fr 1fr auto;margin-bottom:6px">
+    <input value="${(arr[i].name||'').replace(/"/g,'&quot;')}" placeholder="手当名"
+      oninput="${name}[${i}].name=this.value">
+    <input type="number" value="${arr[i].amount||0}" placeholder="金額（円）"
+      oninput="${name}[${i}].amount=Number(this.value)||0;updatePayTotal()">
+    <input type="date" value="${arr[i].date||''}" title="適用日"
+      oninput="${name}[${i}].date=this.value">
+    <button type="button" class="btn ghost sm danger" onclick="del${name==='draftAllow'?'Allowance':'Benefit'}(${i})">×</button>
+  </div>`;
+}
+function renderAllowances(){
+  $('allowanceBox').innerHTML=draftAllow.map((a,i)=>allowRowHtml(draftAllow,'draftAllow',i)).join('')
+    ||'<div class="muted" style="font-size:12px">手当はありません</div>';
+  updatePayTotal();
+}
+function addAllowanceRow(){draftAllow.push({name:'',amount:0,date:''});renderAllowances();}
+function delAllowance(i){draftAllow.splice(i,1);renderAllowances();}
+/* ----- その他手当・補助（月給に含まない） ----- */
+function renderBenefits(){
+  $('benefitBox').innerHTML=draftBenefit.map((a,i)=>allowRowHtml(draftBenefit,'draftBenefit',i)).join('')
+    ||'<div class="muted" style="font-size:12px">その他手当はありません</div>';
+  updatePayTotal();
+}
+function addBenefitRow(){draftBenefit.push({name:'家賃補助',amount:0,date:''});renderBenefits();}
+function delBenefit(i){draftBenefit.splice(i,1);renderBenefits();}
+/* ----- 給与改定履歴 ----- */
+function renderSalaryHist(){
+  const box=$('salaryHistBox');
+  if(!draftSalaryHist.length){box.innerHTML='<div class="muted" style="font-size:12px">給与改定の記録はまだありません</div>';return;}
+  box.innerHTML=draftSalaryHist.slice().reverse().map(h=>{
+    const yen=v=>'¥'+Number(v||0).toLocaleString();
+    const detail=h.payType==='時給'
+      ? `時給 ${yen(h.base)}`
+      : `月給 ${yen(h.monthly)}（基本給 ${yen(h.base)}＋手当 ${yen(h.allow)}）`;
+    return `<div class="h-item"><span class="h-date">${h.date||'-'} 適用</span> ｜ ${detail}`+
+      `${h.benefit?`　その他手当 ${yen(h.benefit)}`:''}</div>`;
+  }).join('');
+}
+function closeModal(){$('overlay').classList.remove('show')}
+function toggleStatusDate(){
+  const s=$('f_status').value;
+  $('statusDateWrap').style.display=(s==='在職')?'none':'flex';
+  $('statusDateLabel').textContent=(s==='退職')?'退職日':'開始日';
+}
+function renderHistory(){
+  const box=$('historyBox');
+  if(!draftHistory.length){box.innerHTML='<div class="muted" style="font-size:12px">変更履歴はまだありません</div>';return;}
+  box.innerHTML=draftHistory.slice().reverse().map(h=>
+    `<div class="h-item"><span class="h-date">${h.date}</span> ｜ <b>${h.field}</b> ${h.note||''}</div>`).join('');
+}
+function setupChangeFields(){
+  $('c_field').innerHTML=CHANGE_ITEMS.map(x=>`<option>${x}</option>`).join('');
+  onChangeFieldSelect();
+}
+function onChangeFieldSelect(){
+  const item=$('c_field').value;
+  const opts=changeNoteOptions(item);
+  if(opts){
+    $('c_noteWrap').innerHTML=`<select id="c_note"><option value="">-</option>`+
+      opts.map(o=>`<option>${escapeHtml(o)}</option>`).join('')+`</select>`;
+  }else{
+    $('c_noteWrap').innerHTML=`<input id="c_note" placeholder="変更後の内容を入力">`;
+  }
+}
+function addChange(){
+  const date=$('c_date').value, f=$('c_field').value, n=($('c_note').value||'').trim();
+  if(!n){alert('変更内容を入力・選択してください');return;}
+  draftHistory.push({date:date||new Date().toISOString().slice(0,10),field:f,note:n});
+  $('c_date').value='';onChangeFieldSelect();renderHistory();
+}
+function saveEmp(ev){
+  ev.preventDefault();
+  if(!isAdmin){alert('編集権限がありません（管理者のみ）');return false;}
+  if(!$('f_name').value.trim()){switchModalTab('basic');alert('氏名を入力してください');return false;}
+  if(!$('f_company').value){switchModalTab('emp');alert('会社名を選択してください');return false;}
+  if(!$('f_hire').value){switchModalTab('emp');alert('入社日を入力してください');return false;}
+  const grade=$('f_grade').value, salaryVal=Number($('f_salary').value)||0;
+  const monthly=$('f_payType').value==='月給';
+  const rg=(DB.settings.gradeRange||{})[grade];
+  if(monthly&&rg&&((rg.min!=null&&salaryVal<rg.min)||(rg.max!=null&&salaryVal>rg.max))){
+    const range=`${rg.min!=null?'¥'+Number(rg.min).toLocaleString():'—'}〜${rg.max!=null?'¥'+Number(rg.max).toLocaleString():'—'}`;
+    if(!confirm(`基本給が等級「${grade}」の給与レンジ（${range}）の範囲外です。\nこのまま保存しますか？`))return false;
+  }
+  const e=editing?DB.employees.find(x=>x.id===editing):{id:'E'+Date.now(),history:[]};
+  const prevComp=editing?{payType:e.payType||'',salary:Number(e.salary)||0,
+    allow:sumList(e.allowances),benefit:sumList(e.benefits)}:null;
+  const v=id=>$(id).value;
+  Object.assign(e,{
+    code:v('f_code')||String(1000+DB.employees.length+1), name:v('f_name'),kana:v('f_kana'),
+    gender:v('f_gender'),birth:v('f_birth'),tel:v('f_tel'),postal:v('f_postal'),addr:v('f_addr'),email:v('f_email'),
+    emgName:v('f_emgName'),emgRel:v('f_emgRel'),emgTel:v('f_emgTel'),emgAddr:v('f_emgAddr'),
+    mynum:v('f_mynum'),pension:v('f_pension'),emp_ins:v('f_emp_ins'),bank:v('f_bank'),
+    company:v('f_company'),store:v('f_store'),trainStore:v('f_trainStore'),title:v('f_title'),grade:v('f_grade'),
+    type:v('f_type'),hire:v('f_hire'),payType:v('f_payType'),trainingStatus:v('f_training'),
+    managedStores:draftManaged.slice(),bankProof:draftBankProof,
+    contracts:draftContracts.slice(),contractLog:draftContractLog.slice(),consentDoc:DOC_DRAFTS.consent||null,
+    salary:Number(v('f_salary'))||0,hourlyPremium:Number(v('f_hourlyPremium'))||0,salaryDate:v('f_salaryDate'),
+    empIns:v('f_empIns'),socialIns:v('f_socialIns'),
+    allowances:draftAllow.filter(a=>a.name||a.amount),benefits:draftBenefit.filter(a=>a.name||a.amount),
+    commute:v('f_commute'),fare:Number(v('f_fare'))||0,route:v('f_route'),
+    status:v('f_status'),statusDate:($('f_status').value==='在職')?'':v('f_statusDate'),
+    onboard:v('f_onboard'),history:draftHistory
+  });
+  // 給与（基本給・手当）に変更があれば改定履歴に記録
+  e.salaryHistory=e.salaryHistory||[];
+  const newComp={payType:e.payType,salary:Number(e.salary)||0,allow:sumList(e.allowances),benefit:sumList(e.benefits)};
+  if(prevComp&&(prevComp.payType!==newComp.payType||prevComp.salary!==newComp.salary
+      ||prevComp.allow!==newComp.allow||prevComp.benefit!==newComp.benefit)){
+    e.salaryHistory.push({date:v('f_salaryDate')||new Date().toISOString().slice(0,10),
+      payType:newComp.payType,base:newComp.salary,allow:newComp.allow,benefit:newComp.benefit,
+      monthly:newComp.payType==='月給'?newComp.salary+newComp.allow:newComp.salary});
+  }
+  if(e.custom){for(const k of Object.keys(e.custom)){
+    const el=$('cf_'+k); if(el)e.custom[k].value=el.value;}}
+  if(!editing){
+    e.history.push({date:new Date().toISOString().slice(0,10),field:'登録',note:'新規登録'});
+    DB.employees.push(e);
+  }
+  save();renderList();renderOnboard();
+  // 保存後は同じ従業員の「閲覧」表示に戻す（モーダルは開いたまま・現在のタブを維持）
+  const curTab=document.querySelector('#empTabs .mtab.on');
+  const tab=curTab?curTab.dataset.p:'basic';
+  openEditor(e.id);
+  switchModalTab(tab);
+  return false;
+}
+function deleteEmp(){
+  if(!isAdmin){alert('削除権限がありません（管理者のみ）');return;}
+  if(!editing)return;
+  if(!confirm('この従業員を削除します。よろしいですか？'))return;
+  DB.employees=DB.employees.filter(x=>x.id!==editing);
+  save();closeModal();renderList();renderOnboard();
+}
+
+/* ============ 入職フォーム（管理者が項目を設定可能） ============ */
+function fieldOptions(f){
+  if(f.source==='stores')return DB.settings.stores;
+  if(f.source==='depts')return DB.settings.depts;
+  return f.options||[];
+}
+function onboardFieldHtml(f){
+  if(f.type==='note'){
+    return `<div class="full"><div class="note" style="white-space:pre-wrap">${escapeHtml(f.label)}</div></div>`;
+  }
+  const full=(f.full||f.type==='textarea'||f.type==='text'||f.type==='file')?' full':'';
+  const req=f.required?' <span style="color:var(--bad)">*</span>':'';
+  let ctrl;
+  if(f.type==='select'){
+    ctrl=`<select id="of_${f.key}"><option value="">-</option>`+
+      fieldOptions(f).map(o=>`<option>${escapeHtml(o)}</option>`).join('')+`</select>`;
+  }else if(f.type==='textarea'){
+    ctrl=`<textarea id="of_${f.key}" rows="2"></textarea>`;
+  }else if(f.type==='file'){
+    ctrl=`<input id="of_${f.key}" type="file" accept="image/*,application/pdf" onchange="onBankProofPick(this)">
+      <div class="muted" id="of_${f.key}_status" style="font-size:11px;margin-top:4px"></div>`;
+  }else{
+    const t={text:'text',date:'date',number:'number',tel:'tel',email:'email'}[f.type]||'text';
+    ctrl=`<input id="of_${f.key}" type="${t}">`;
+  }
+  return `<div class="field${full}"><label>${escapeHtml(f.label)}${req}</label>${ctrl}</div>`;
+}
+let pendingBankProof=null;
+function openOnboardForm(){
+  pendingBankProof=null;
+  const fields=DB.settings.onboardFields;
+  const groups=[...new Set(fields.map(f=>f.group||'入職手続き'))];
+  // FORM_GROUPS の順を優先しつつ、未知のグループは末尾に
+  const order=[...FORM_GROUPS.filter(g=>groups.includes(g)),...groups.filter(g=>!FORM_GROUPS.includes(g))];
+  let html='';
+  order.forEach((g,gi)=>{
+    html+=`<div class="full"><div class="onb-step">${gi+1}. ${escapeHtml(g)}</div></div>`;
+    html+=fields.filter(f=>(f.group||'入職手続き')===g).map(onboardFieldHtml).join('');
+  });
+  $('onboardFormBody').innerHTML=html;
+  $('onboardOverlay').classList.add('show');
+}
+function onBankProofPick(input){
+  const file=input.files&&input.files[0];
+  const status=$(input.id+'_status');
+  if(!file){pendingBankProof=null;if(status)status.textContent='';return;}
+  if(file.size>4*1024*1024){alert('ファイルサイズが大きすぎます（4MBまで）。');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=()=>{pendingBankProof={name:file.name,type:file.type,data:reader.result};
+    if(status)status.textContent=`添付：${file.name}`;};
+  reader.readAsDataURL(file);
+}
+function closeOnboardForm(){$('onboardOverlay').classList.remove('show')}
+function submitOnboard(ev){
+  ev.preventDefault();
+  const data={}, custom={};
+  for(const f of DB.settings.onboardFields){
+    if(f.type==='note')continue; // 説明文は入力なし
+    if(f.type==='file'){
+      if(f.required && !pendingBankProof){alert(`「${f.label}」を添付してください`);return false;}
+      continue;
+    }
+    const el=$('of_'+f.key); const val=el?el.value.trim():'';
+    if(f.required && !val){alert(`「${f.label}」は必須項目です`);el&&el.focus();return false;}
+    if(f.core)data[f.key]=val; else custom[f.key]={label:f.label,value:val};
+  }
+  const name=((data.sei||'')+' '+(data.mei||'')).trim();
+  const kana=((data.seiKana||'')+' '+(data.meiKana||'')).trim();
+  const bankStr=[data.bankFi,data.bankBranch,data.bankType,data.bankNo,data.bankHolder,
+    data.bankYucho?('ゆうちょ '+data.bankYucho):'',data.bankRemark?('備考:'+data.bankRemark):'']
+    .filter(Boolean).join(' ');
+  const e={id:'E'+Date.now(),code:String(1000+DB.employees.length+1),
+    name:name,kana:kana,sei:data.sei||'',mei:data.mei||'',seiKana:data.seiKana||'',meiKana:data.meiKana||'',
+    gender:'',birth:data.birth||'',
+    tel:data.tel||'',postal:data.postal||'',addr:data.addr||'',email:data.email||'',
+    emgName:data.emgName||'',emgRel:data.emgRel||'',emgTel:data.emgTel||'',emgAddr:data.emgAddr||'',
+    mynum:'',pension:'',emp_ins:'',bank:bankStr,
+    bankFi:data.bankFi||'',bankBranch:data.bankBranch||'',bankType:data.bankType||'',
+    bankNo:data.bankNo||'',bankHolder:data.bankHolder||'',bankYucho:data.bankYucho||'',bankRemark:data.bankRemark||'',
+    bankProof:pendingBankProof||null,
+    company:DB.settings.companies[0]||'',store:data.store||'',trainStore:data.trainStore||'',
+    dept:'',title:'',grade:'',type:data.type||'正社員',hire:data.hire||'',
+    payType:'月給',salary:0,hourlyPremium:0,salaryDate:data.hire||'',managedStores:[],
+    trainingStatus:(data.type==='パート・アルバイト')?'研修中':'対象外',
+    allowances:[{name:'出張手当',amount:30000,date:''},{name:'役職手当',amount:10000,date:''}],
+    benefits:[],empIns:'加入',socialIns:'加入',salaryHistory:[],
+    commute:data.commute||'電車',fare:Number(data.fare)||0,route:data.route||'',
+    status:'在職',statusDate:'',onboard:'回答済み',custom:custom,
+    history:[{date:new Date().toISOString().slice(0,10),field:'入職手続き',note:'本人がフォームから提出'}]};
+  DB.employees.push(e);
+  save();renderOnboard();renderList();
+  if(document.body.classList.contains('public')){
+    $('onboardOverlay').querySelector('.modal').innerHTML=
+      '<h2>送信が完了しました</h2><p class="muted">ご記入ありがとうございました。手続き内容を人事担当が確認します。このページは閉じていただいて構いません。</p>';
+  }else{
+    closeOnboardForm();
+    alert('提出が完了しました。一覧に「回答済み」で登録されました。');
+  }
+  return false;
+}
+function copyUrl(){
+  navigator.clipboard?.writeText($('formUrl').textContent).then(
+    ()=>alert('URLをコピーしました'),()=>alert('コピーに失敗しました'));
+}
+
+/* ============ 管理者設定 ============ */
+function renderAdmin(){
+  if(!isAdmin)return;
+  ['stores','titles'].forEach(renderMaster);renderGradeMaster();renderUsers();renderFormFields();renderListColConfig();
+}
+/* ----- 従業員一覧の列設定（並び順・表示） ----- */
+function currentListCols(){
+  // settings.listCols（無ければCOLS_ADMINの既定）を {key,visible} 配列で返す
+  let lc=DB.settings.listCols;
+  const known=COLS_ADMIN.map(c=>c.key);
+  if(!lc||!lc.length){lc=defaultListCols();}
+  else{
+    lc=lc.filter(x=>known.includes(x.key));
+    COLS_ADMIN.forEach(c=>{if(!lc.some(x=>x.key===c.key))lc.push({key:c.key,visible:false});});
+  }
+  return lc;
+}
+function renderListColConfig(){
+  const lc=currentListCols();
+  const lbl={};COLS_ADMIN.forEach(c=>lbl[c.key]=c.label);
+  $('listColConfig').innerHTML=lc.map((x,i)=>`
+    <div class="changewrap" style="grid-template-columns:auto auto 1fr;gap:8px;align-items:center;margin-bottom:4px">
+      <span style="white-space:nowrap">
+        <button type="button" class="btn ghost sm" onclick="moveListCol(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button type="button" class="btn ghost sm" onclick="moveListCol(${i},1)" ${i===lc.length-1?'disabled':''}>▼</button></span>
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600">
+        <input type="checkbox" ${x.visible?'checked':''} style="width:auto" onchange="toggleListCol(${i},this.checked)"> ${lbl[x.key]}</label>
+      <span></span>
+    </div>`).join('');
+}
+function moveListCol(i,d){
+  const lc=currentListCols();const j=i+d;if(j<0||j>=lc.length)return;
+  [lc[i],lc[j]]=[lc[j],lc[i]];DB.settings.listCols=lc;save();renderListColConfig();renderList();
+}
+function toggleListCol(i,v){
+  const lc=currentListCols();lc[i].visible=v;DB.settings.listCols=lc;save();renderList();
+}
+function resetListCols(){DB.settings.listCols=null;save();renderListColConfig();renderList();renderColPicker();}
+/* ----- 一覧ツールバーの「表示項目」メニュー ----- */
+function toggleColPicker(){
+  const m=$('colPickerMenu');
+  if(m.style.display==='none'){renderColPicker();m.style.display='block';}
+  else m.style.display='none';
+}
+function renderColPicker(){
+  const lc=currentListCols();
+  const lbl={};COLS_ADMIN.forEach(c=>lbl[c.key]=c.label);
+  $('colPickerMenu').innerHTML=lc.map(x=>
+    `<label><input type="checkbox" ${x.visible?'checked':''} onchange="toggleListColByKey('${x.key}',this.checked)"> ${lbl[x.key]}</label>`).join('')
+    +`<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px">
+        <button class="btn ghost sm" onclick="resetListCols()">既定（7項目）に戻す</button></div>`;
+}
+function toggleListColByKey(key,v){
+  const lc=currentListCols();const it=lc.find(x=>x.key===key);if(it)it.visible=v;
+  DB.settings.listCols=lc;save();renderList();renderListColConfig();
+}
+// メニュー外クリックで閉じる
+document.addEventListener('click',e=>{
+  const m=$('colPickerMenu');if(!m||m.style.display==='none')return;
+  if(!e.target.closest('#colPickerMenu')&&!(e.target.tagName==='BUTTON'&&e.target.textContent.includes('表示項目')))m.style.display='none';
+});
+/* ----- 入職フォームの項目設定 ----- */
+const fieldTypeJa={text:'テキスト',textarea:'複数行',date:'日付',number:'数値',tel:'電話',email:'メール',select:'選択肢',note:'説明文',file:'ファイル添付'};
+function fieldTypeLabel(f){
+  if(f.type==='select'){
+    const src=f.source==='stores'?'店舗マスタ':f.source==='depts'?'部署マスタ':(f.options||[]).join('/');
+    return '選択肢（'+src+'）';
+  }
+  return fieldTypeJa[f.type]||f.type;
+}
+function renderFormFields(){
+  const F=DB.settings.onboardFields;
+  $('formFieldRows').innerHTML=F.map((f,i)=>`<tr>
+    <td style="white-space:nowrap">
+      <button class="btn ghost sm" onclick="moveFormField(${i},-1)" ${i===0?'disabled':''}>▲</button>
+      <button class="btn ghost sm" onclick="moveFormField(${i},1)" ${i===F.length-1?'disabled':''}>▼</button></td>
+    <td><input type="text" value="${(f.label||'').replace(/"/g,'&quot;')}" style="width:200px"
+        onchange="setFieldProp(${i},'label',this.value)"></td>
+    <td><select onchange="setFieldProp(${i},'group',this.value)">${
+        FORM_GROUPS.map(g=>`<option ${((f.group||'入職手続き')===g)?'selected':''}>${g}</option>`).join('')}</select></td>
+    <td>${fieldTypeLabel(f)}${f.core?' <span class="muted" style="font-size:11px">(コア)</span>':''}
+      ${f.type==='select'?(f.source?'<div class="muted" style="font-size:11px">店舗マスタで管理</div>':
+        `<div style="margin-top:4px"><button type="button" class="btn ghost sm" onclick="openOptEditor(${i})">選択肢を編集（${(f.options||[]).length}）</button></div>`):''}</td>
+    <td style="text-align:center">${f.type==='note'?'<span class="muted" style="font-size:11px">—</span>':
+        `<input type="checkbox" ${f.required?'checked':''} style="width:auto" onchange="setFieldProp(${i},'required',this.checked)">`}</td>
+    <td>${f.core?'':'<button class="btn ghost sm danger" onclick="delFormField('+i+')">×</button>'}</td>
+  </tr>`).join('');
+}
+function setFieldProp(i,k,v){DB.settings.onboardFields[i][k]=v;save();}
+function moveFormField(i,d){
+  const F=DB.settings.onboardFields, j=i+d;
+  if(j<0||j>=F.length)return;
+  [F[i],F[j]]=[F[j],F[i]];save();renderFormFields();
+}
+function addFormField(){
+  const type=$('ff_type').value;
+  // 説明文：本文は「説明文の本文」欄を優先、なければ項目名欄
+  let label=(type==='note')?($('ff_options').value.trim()||$('ff_label').value.trim()):$('ff_label').value.trim();
+  if(!label){alert(type==='note'?'説明文の本文を入力してください':'項目名を入力してください');return;}
+  const f={key:'c'+Date.now(),label,type,group:'入職手続き',required:(type==='note'||type==='file')?false:$('ff_required').checked,core:false};
+  if(type==='select'){
+    f.options=$('ff_options').value.split(',').map(s=>s.trim()).filter(Boolean);
+    if(!f.options.length){alert('選択肢をカンマ区切りで入力してください');return;}
+  }
+  DB.settings.onboardFields.push(f);
+  $('ff_label').value='';$('ff_options').value='';$('ff_required').checked=false;
+  save();renderFormFields();
+}
+function delFormField(i){
+  const f=DB.settings.onboardFields[i];
+  if(f.core){alert('コア項目は削除できません');return;}
+  if(!confirm(`項目「${f.label}」を削除しますか？`))return;
+  DB.settings.onboardFields.splice(i,1);save();renderFormFields();
+}
+/* ----- 選択肢（select項目の候補）の編集 ----- */
+let optEditIndex=-1;
+function openOptEditor(i){
+  optEditIndex=i;
+  const f=DB.settings.onboardFields[i];
+  f.options=f.options||[];
+  $('optTitle').textContent=`「${f.label}」の選択肢`;
+  $('opt_add').value='';renderOptList();
+  $('optOverlay').classList.add('show');
+}
+function renderOptList(){
+  const f=DB.settings.onboardFields[optEditIndex];
+  const opts=f.options||[];
+  $('optList').innerHTML=opts.length?opts.map((o,j)=>
+    `<span class="mtag">${escapeHtml(o)}<button onclick="delOpt(${j})" title="削除">×</button></span>`).join('')
+    :'<span class="muted" style="font-size:12px">選択肢がありません</span>';
+}
+function addOpt(){
+  const f=DB.settings.onboardFields[optEditIndex];
+  const v=$('opt_add').value.trim();if(!v)return;
+  f.options=f.options||[];
+  if(f.options.includes(v)){alert('既に存在します');return;}
+  f.options.push(v);$('opt_add').value='';save();renderOptList();
+}
+function delOpt(j){
+  const f=DB.settings.onboardFields[optEditIndex];
+  f.options.splice(j,1);save();renderOptList();
+}
+function closeOptEditor(){$('optOverlay').classList.remove('show');renderFormFields();}
+/* ----- ログインユーザー管理 ----- */
+function renderUsers(){
+  $('userRows').innerHTML=DB.settings.users.map((u,i)=>`<tr>
+    <td><b>${u.loginId}</b></td><td>${u.name||''}</td>
+    <td><select onchange="setUserField(${i},'role',this.value)">
+        <option value="general" ${u.role==='general'?'selected':''}>一般</option>
+        <option value="admin" ${u.role==='admin'?'selected':''}>管理者</option></select></td>
+    <td><input type="text" value="${u.pass}" style="width:110px" onchange="setUserField(${i},'pass',this.value)"></td>
+    <td><button class="btn ghost sm danger" onclick="delUser(${i})">×</button></td></tr>`).join('');
+}
+function adminCount(){return DB.settings.users.filter(u=>u.role==='admin').length;}
+function setUserField(i,k,v){
+  const u=DB.settings.users[i];
+  if(k==='role'&&v!=='admin'&&u.role==='admin'&&adminCount()<=1){
+    alert('管理者が0人になるため変更できません');renderUsers();return;}
+  u[k]=v;save();
+}
+function addUser(){
+  const id=$('u_id').value.trim();
+  if(!id){return;}
+  if(DB.settings.users.some(u=>u.loginId===id)){alert('同じログインIDが既に存在します');return;}
+  DB.settings.users.push({loginId:id,name:$('u_name').value.trim()||id,
+    role:$('u_role').value,pass:$('u_pass').value||'1234'});
+  $('u_id').value='';$('u_name').value='';$('u_pass').value='';
+  save();renderUsers();
+}
+function delUser(i){
+  const u=DB.settings.users[i];
+  if(currentUser&&u.loginId===currentUser.loginId){alert('ログイン中の自分自身は削除できません');return;}
+  if(u.role==='admin'&&adminCount()<=1){alert('最後の管理者は削除できません');return;}
+  if(!confirm(`ユーザー「${u.loginId}」を削除しますか？`))return;
+  DB.settings.users.splice(i,1);save();renderUsers();
+}
+function renderGradeMaster(){
+  const tb=$('m_grades');
+  tb.innerHTML=DB.settings.grades.map(g=>{
+    const r=DB.settings.gradeRange[g]||{};
+    return `<tr><td><b>${g}</b>${r.hourly?'<br><span class="muted" style="font-size:10px">時給</span>':''}</td>
+      <td><input type="text" value="${escapeHtml(r.pos||'')}" style="width:150px" onchange="setGradeText('${g}','pos',this.value)"></td>
+      <td><input type="number" value="${r.base??''}" style="width:95px" onchange="setGradeRange('${g}','base',this.value)"></td>
+      <td><input type="number" value="${r.min??''}" style="width:85px" onchange="setGradeRange('${g}','min',this.value)"></td>
+      <td><input type="number" value="${r.max??''}" style="width:85px" onchange="setGradeRange('${g}','max',this.value)"></td>
+      <td><input type="text" value="${escapeHtml(r.note||'')}" style="width:160px" onchange="setGradeText('${g}','note',this.value)"></td>
+      <td><button class="btn ghost sm danger" onclick="delGrade('${g}')">×</button></td></tr>`;
+  }).join('')||'<tr><td colspan="7" class="muted" style="font-size:12px">未登録</td></tr>';
+}
+function setGradeRange(g,k,v){
+  DB.settings.gradeRange[g]=DB.settings.gradeRange[g]||{};
+  DB.settings.gradeRange[g][k]=v===''?undefined:Number(v);
+  save();
+}
+function setGradeText(g,k,v){
+  DB.settings.gradeRange[g]=DB.settings.gradeRange[g]||{};
+  DB.settings.gradeRange[g][k]=v;save();
+}
+function addGrade(){
+  const name=$('add_grades').value.trim();
+  if(!name){return;}
+  if(DB.settings.grades.includes(name)){alert('既に登録されています');return;}
+  const base=$('add_gbase').value, min=$('add_gmin').value, max=$('add_gmax').value;
+  DB.settings.grades.push(name);
+  DB.settings.gradeRange[name]={pos:$('add_gpos').value.trim(),note:$('add_gnote').value.trim(),
+    base:base===''?undefined:Number(base),min:min===''?undefined:Number(min),max:max===''?undefined:Number(max)};
+  ['add_grades','add_gpos','add_gbase','add_gmin','add_gmax','add_gnote'].forEach(i=>$(i).value='');
+  save();renderGradeMaster();
+}
+function delGrade(g){
+  if(DB.employees.some(e=>e.grade===g)){alert(`等級「${g}」は使用中のため削除できません。`);return;}
+  if(!confirm(`等級「${g}」を削除しますか？`))return;
+  DB.settings.grades=DB.settings.grades.filter(x=>x!==g);
+  delete DB.settings.gradeRange[g];
+  save();renderGradeMaster();
+}
+const masterLabel={companies:'会社名',stores:'店舗',depts:'部署',grades:'等級',titles:'役職'};
+function renderMaster(key){
+  const box=$('m_'+key);
+  box.innerHTML=DB.settings[key].map((v,i)=>
+    `<span class="mtag">${v}<button onclick="delMaster('${key}',${i})" title="削除">×</button></span>`).join('')
+    || '<span class="muted" style="font-size:12px">未登録</span>';
+}
+function addMaster(key){
+  const inp=$('add_'+key);const v=inp.value.trim();
+  if(!v)return;
+  if(DB.settings[key].includes(v)){alert('既に登録されています');return;}
+  DB.settings[key].push(v);inp.value='';save();renderMaster(key);
+  if(key==='companies')refreshCompanyLabel();
+}
+function delMaster(key,idx){
+  const val=DB.settings[key][idx];
+  const fieldMap={companies:'company',stores:'store',depts:'dept',grades:'grade',titles:'title'};
+  const used=DB.employees.some(e=>e[fieldMap[key]]===val);
+  if(used){alert(`「${val}」は従業員データで使用中のため削除できません。`);return;}
+  if(!confirm(`${masterLabel[key]}「${val}」を削除しますか？`))return;
+  DB.settings[key].splice(idx,1);save();renderMaster(key);
+  if(key==='companies')refreshCompanyLabel();
+}
+/* ============ ログイン / 権限 ============ */
+function showLogin(){
+  currentUser=null;isAdmin=false;
+  $('loginId').value='';$('loginPass').value='';
+  $('logoutBtn').style.display='none';$('userLabel').textContent='';
+  $('loginOverlay').classList.add('show');
+}
+function doLogin(){
+  const id=$('loginId').value.trim(), pw=$('loginPass').value;
+  const u=DB.settings.users.find(x=>x.loginId===id&&x.pass===pw);
+  if(!u){alert('ログインIDまたはパスワードが違います');return;}
+  currentUser=u;isAdmin=(u.role==='admin');
+  $('loginOverlay').classList.remove('show');
+  $('logoutBtn').style.display='inline-block';
+  $('userLabel').textContent=u.name+' さん';
+  updateRole();refreshCompanyLabel();renderDash();
+}
+function doLogout(){closeModal();closeView();showLogin();}
+function updateRole(){
+  const b=$('roleBadge');
+  b.textContent=isAdmin?'管理者':'一般';
+  b.className='rolebadge '+(isAdmin?'role-admin':'role-user');
+  applyPermissions();
+}
+function applyPermissions(){
+  sortIdx=null;
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=isAdmin?'':'none');
+  if(!isAdmin){
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    const lb=document.querySelector('nav button[data-tab="list"]');
+    lb.classList.add('active');$('list').classList.add('active');
+  }else{renderAdmin();}
+  renderList();renderOnboard();
+}
+
+/* ============ CSVエクスポート（在職者） ============ */
+function exportCSV(){
+  const sumA=arr=>(arr||[]).reduce((s,a)=>s+(Number(a.amount)||0),0);
+  const allowTotal=e=>sumA(e.allowances);
+  const allowDetail=e=>(e.allowances||[]).filter(a=>a.name||a.amount).map(a=>`${a.name}:${a.amount||0}`).join(' / ');
+  const benefitTotal=e=>sumA(e.benefits);
+  const benefitDetail=e=>(e.benefits||[]).filter(a=>a.name||a.amount).map(a=>`${a.name}:${a.amount||0}`).join(' / ');
+  const monthly=e=>e.payType==='月給'?((Number(e.salary)||0)+sumA(e.allowances)):'';
+  const cols=[['code','社員番号'],['name','氏名'],['kana','フリガナ'],['gender','性別'],['birth','生年月日'],
+    ['company','会社名'],['store','配属店舗'],[e=>(e.managedStores||[]).join(' / '),'担当店舗'],['trainStore','研修店舗'],
+    ['title','役職'],['grade','等級'],['trainingStatus','研修状況'],
+    ['type','雇用形態'],['hire','入社日'],['payType','給与区分'],['salary','基本給/時給(平日)'],
+    [e=>e.payType==='時給'?(e.hourlyPremium||''):'','時給(土日・深夜)'],
+    [allowTotal,'手当合計'],[allowDetail,'手当内訳'],[monthly,'月給(基本給+手当)'],
+    [benefitTotal,'その他手当計'],[benefitDetail,'その他手当内訳'],
+    ['empIns','雇用保険'],['socialIns','社会保険'],
+    ['commute','通勤手段'],['fare','定期代'],['route','通勤経路'],
+    ['tel','電話'],['postal','郵便番号'],['addr','住所'],['email','メール'],
+    ['emgName','緊急連絡先氏名'],['emgRel','続柄'],['emgTel','緊急連絡先電話'],['emgAddr','緊急連絡先住所'],
+    ['bank','振込口座'],['status','ステータス']];
+  const active=DB.employees.filter(e=>e.status==='在職');
+  const esc=v=>{v=(v==null?'':String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const get=(e,k)=>typeof k==='function'?k(e):e[k];
+  const head=cols.map(c=>c[1]).join(',');
+  const body=active.map(e=>cols.map(c=>esc(get(e,c[0]))).join(',')).join('\r\n');
+  const blob=new Blob(['﻿'+head+'\r\n'+body],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='在職者一覧_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+/* ============ CSV一括追加（取込） ============ */
+// CSVヘッダ名 → 従業員フィールド
+const IMPORT_MAP={'社員番号':'code','氏名':'name','フリガナ':'kana','性別':'gender','生年月日':'birth',
+  '会社名':'company','配属店舗':'store','研修店舗':'trainStore','役職':'title','等級':'grade',
+  '雇用形態':'type','研修状況':'trainingStatus','給与区分':'payType','基本給':'salary','入社日':'hire',
+  'メール':'email','電話':'tel','郵便番号':'postal','住所':'addr','ステータス':'status'};
+function downloadImportTemplate(){
+  const head=Object.keys(IMPORT_MAP);
+  const sample=['1101','山田 太郎','ヤマダ タロウ','男性','1995-04-01',DB.settings.companies[0]||'',
+    DB.settings.stores[0]||'','','スタッフ','L2','正社員','対象外','月給','260000','2026-04-01',
+    'taro@example.com','090-0000-0000','100-0001','東京都〇〇区','在職'];
+  const esc=v=>/[",\n]/.test(v)?'"'+String(v).replace(/"/g,'""')+'"':v;
+  const blob=new Blob(['﻿'+head.join(',')+'\r\n'+sample.map(esc).join(',')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='従業員追加テンプレート.csv';a.click();
+}
+// 簡易CSVパーサ（ダブルクオート対応）
+function parseCSV(text){
+  text=text.replace(/^﻿/,'');
+  const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}
+    else{if(c==='"')q=true;
+      else if(c===','){row.push(cur);cur='';}
+      else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}
+      else if(c==='\r'){}
+      else cur+=c;}}
+  if(cur!==''||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(r=>r.some(c=>c.trim()!==''));
+}
+function importEmployeesCSV(input){
+  if(!isAdmin){alert('管理者のみ操作できます');return;}
+  const file=input.files&&input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const rows=parseCSV(reader.result);
+      if(rows.length<2){alert('データ行がありません');input.value='';return;}
+      const headers=rows[0].map(h=>h.trim());
+      let added=0;
+      for(let r=1;r<rows.length;r++){
+        const obj={};headers.forEach((h,c)=>{const key=IMPORT_MAP[h];if(key)obj[key]=(rows[r][c]||'').trim();});
+        if(!obj.name)continue; // 氏名必須
+        const e=Object.assign(newEmployeeDefaults(),obj);
+        e.salary=Number(obj.salary)||0;
+        if(!e.code)e.code=String(1000+DB.employees.length+added+1);
+        if(!e.payType)e.payType='月給';
+        if(!e.status)e.status='在職';
+        if(!e.salaryDate)e.salaryDate=e.hire||'';
+        e.history=[{date:new Date().toISOString().slice(0,10),field:'登録',note:'CSV一括取込'}];
+        DB.employees.push(e);added++;
+      }
+      save();renderList();renderOnboard();
+      alert(`${added}件の従業員を追加しました。`);
+    }catch(err){alert('CSVの読み込みに失敗しました：'+err.message);}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+function newEmployeeDefaults(){
+  return {id:'E'+Date.now()+Math.floor(Math.random()*1000),code:'',name:'',kana:'',gender:'',birth:'',
+    tel:'',postal:'',addr:'',email:'',emgName:'',emgRel:'',emgTel:'',emgAddr:'',
+    mynum:'',pension:'',emp_ins:'',bank:'',bankProof:null,
+    company:DB.settings.companies[0]||'',store:'',trainStore:'',managedStores:[],
+    title:'',grade:'',type:'正社員',trainingStatus:'対象外',hire:'',
+    payType:'月給',salary:0,hourlyPremium:0,salaryDate:'',
+    allowances:DEFAULT_ALLOWANCES.map(a=>({name:a.name,amount:a.amount,date:''})),
+    benefits:[],empIns:'加入',socialIns:'加入',salaryHistory:[],
+    commute:'電車',fare:0,route:'',status:'在職',statusDate:'',onboard:'未回答',custom:{},history:[]};
+}
+
+/* ============ ダッシュボード ============ */
+let charts={};
+function renderDash(){
+  const emp=DB.employees;
+  const active=emp.filter(e=>e.status==='在職');
+  const retired=emp.filter(e=>e.status==='退職');
+  const leave=emp.filter(e=>e.status==='産休・育休');
+  const pending=emp.filter(e=>e.status!=='退職'&&e.onboard==='未回答');
+  const avgTen=active.length? (active.reduce((s,e)=>s+tenureYears(e.hire,e.status,e.statusDate),0)/active.length):0;
+  const denom=emp.length||1;
+  const turnover=(retired.length/denom*100);
+
+  $('kpis').innerHTML=[
+    ['在職者数',active.length+'<small> 名</small>'],
+    ['産休・育休',leave.length+'<small> 名</small>'],
+    ['退職者数',retired.length+'<small> 名</small>'],
+    ['平均勤続年数',avgTen.toFixed(1)+'<small> 年</small>'],
+    ['退職率（累計）',turnover.toFixed(1)+'<small> %</small>'],
+    ['手続き未回答',pending.length+'<small> 名</small>'],
+  ].map(k=>`<div class="kpi"><div class="label">${k[0]}</div><div class="val">${k[1]}</div></div>`).join('');
+
+  Object.values(charts).forEach(c=>c&&c.destroy());
+  charts.s=new Chart($('chStatus'),{type:'doughnut',
+    data:{labels:['在職','産休・育休','退職'],datasets:[{data:[active.length,leave.length,retired.length],
+      backgroundColor:['#16a34a','#7c3aed','#dc2626']}]},
+    options:{plugins:{legend:{position:'bottom'}}}});
+  const bins=[0,0,0,0,0];const labels=['0-1年','1-3年','3-5年','5-10年','10年以上'];
+  emp.filter(e=>e.status!=='退職').forEach(e=>{const t=tenureYears(e.hire,e.status,e.statusDate);
+    bins[t<1?0:t<3?1:t<5?2:t<10?3:4]++;});
+  charts.t=new Chart($('chTenure'),{type:'bar',
+    data:{labels,datasets:[{label:'人数',data:bins,backgroundColor:'#2563eb'}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{ticks:{precision:0}}}}});
+  const ageBands=['20代以下','30代','40代','50代以上'];
+  const bandColor=['#60a5fa','#34d399','#fbbf24','#f87171'];
+  const ageCounts=ageBands.map((b,bi)=>
+    emp.filter(e=>e.status!=='退職'&&bandOf(ageFrom(e.birth))===bi).length);
+  charts.a=new Chart($('chAge'),{type:'bar',
+    data:{labels:ageBands,datasets:[{label:'人数',data:ageCounts,backgroundColor:bandColor}]},
+    options:{plugins:{legend:{display:false}},responsive:true,scales:{y:{ticks:{precision:0}}}}});
+  const byYear={};
+  retired.forEach(e=>{const y=(e.statusDate||'').slice(0,4)||'不明';byYear[y]=(byYear[y]||0)+1;});
+  const years=Object.keys(byYear).sort();
+  const rate=years.map(y=>{
+    const yy=Number(y);if(!yy)return 0;
+    const denomY=emp.filter(e=>Number((e.hire||'9999').slice(0,4))<=yy &&
+      !(e.status==='退職'&&Number((e.statusDate||'9999').slice(0,4))<yy)).length||1;
+    return +(byYear[y]/denomY*100).toFixed(1);
+  });
+  charts.r=new Chart($('chTurn'),{
+    data:{labels:years,datasets:[
+      {type:'bar',label:'退職者数',data:years.map(y=>byYear[y]),backgroundColor:'#f59e0b',yAxisID:'y'},
+      {type:'line',label:'退職率(%)',data:rate,borderColor:'#dc2626',backgroundColor:'#dc2626',yAxisID:'y1',tension:.3}
+    ]},
+    options:{plugins:{legend:{position:'bottom'}},
+      scales:{y:{position:'left',ticks:{precision:0},title:{display:true,text:'人数'}},
+        y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'%'}}}}});
+}
+function bandOf(a){if(a==null)return 1;return a<30?0:a<40?1:a<50?2:3}
+
+/* ============ 初期化 ============ */
+function refreshCompanyLabel(){
+  const c=DB.settings.companies[0];
+  $('companyLabel').textContent=(c?c+' ｜ ':'')+'個人情報・雇用内容・通勤経路を一元管理';
+}
+$('formUrl').textContent=location.href.split('#')[0]+'#form';
+refreshCompanyLabel();
+// 新入職者向け公開フォーム（ログイン不要）
+if(location.hash==='#form'){
+  document.body.classList.add('public');
+  $('onboardCancel').style.display='none';
+  openOnboardForm();
+}else{
+  showLogin();
+}
+</script>
+</body>
+</html>

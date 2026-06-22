@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社内ツール ポータル</title>
+<style>
+  :root{
+    --ink:    #16233D;   /* 文字・ヘッダー背景の濃紺 */
+    --paper:  #EEF1F5;   /* ページ背景 */
+    --card:   #FFFFFF;   /* カード面 */
+    --line:   #DCE1E8;   /* 罫線・枠 */
+    --muted:  #5C6B82;   /* 補助テキスト */
+    --launch: #B97E1F;   /* Webアプリ＝「開く」のアクセント（琥珀） */
+    --demo:   #1F7268;   /* スキル＝「デモを見る」のアクセント（青緑） */
+    --mono: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+    --sans: system-ui, -apple-system, "Hiragino Kaku Gothic ProN",
+            "Hiragino Sans", "Noto Sans JP", "Meiryo", sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    font-family:var(--sans);
+    color:var(--ink);
+    background:var(--paper);
+    line-height:1.6;
+  }
+
+  /* ── ヘッダー帯 ───────────────────────── */
+  .masthead{
+    background:var(--ink);
+    color:#fff;
+    padding:48px 24px 44px;
+  }
+  .masthead__inner{ max-width:960px; margin:0 auto; }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:.75rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:#9DB0CF;
+    margin:0 0 14px;
+  }
+  .masthead h1{
+    font-size:clamp(1.8rem, 4.5vw, 2.7rem);
+    font-weight:700;
+    letter-spacing:-.01em;
+    margin:0;
+  }
+  .masthead h1 .bar{
+    display:block;
+    width:46px; height:4px;
+    background:var(--launch);
+    margin:18px 0 0;
+    border-radius:2px;
+  }
+  .masthead p{
+    margin:18px 0 0;
+    max-width:46ch;
+    color:#C7D2E4;
+    font-size:1.02rem;
+  }
+  .meta{
+    margin-top:22px;
+    font-family:var(--mono);
+    font-size:.78rem;
+    color:#9DB0CF;
+    letter-spacing:.04em;
+  }
+  .meta b{ color:#E6ECF6; font-weight:600; }
+
+  /* ── 本文 ───────────────────────────── */
+  main{ max-width:960px; margin:0 auto; padding:8px 24px 72px; }
+
+  .section{ margin-top:48px; }
+  .section__head{
+    display:flex; align-items:baseline; gap:12px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:24px;
+  }
+  .tick{ width:10px; height:10px; border-radius:2px; flex:none; transform:translateY(1px); }
+  .tick--launch{ background:var(--launch); }
+  .tick--demo{ background:var(--demo); }
+  .section__head h2{
+    font-size:1.18rem; font-weight:700; margin:0; letter-spacing:.01em;
+  }
+  .section__head span{
+    font-size:.85rem; color:var(--muted); font-weight:400;
+  }
+
+  /* ── カードのグリッド ────────────────── */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+    gap:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px 20px 18px;
+    display:flex; flex-direction:column;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .card:hover{
+    transform:translateY(-2px);
+    border-color:#C3CCD9;
+    box-shadow:0 8px 24px rgba(22,35,61,.08);
+  }
+  .card h3{
+    font-size:1.05rem; font-weight:700; margin:0 0 8px;
+  }
+  .card p{
+    margin:0 0 14px; font-size:.92rem; color:var(--muted); flex:1;
+  }
+  .path{
+    font-family:var(--mono);
+    font-size:.76rem;
+    color:var(--muted);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:3px 8px;
+    align-self:flex-start;
+    margin-bottom:14px;
+  }
+  .actions{ display:flex; flex-wrap:wrap; gap:10px; }
+
+  /* ボタン */
+  .btn{
+    font-family:var(--sans);
+    font-size:.9rem; font-weight:600;
+    text-decoration:none;
+    padding:9px 16px;
+    border-radius:8px;
+    display:inline-flex; align-items:center; gap:6px;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .btn--launch{ background:var(--launch); color:#fff; }
+  .btn--launch:hover{ background:#9E6A16; }
+  .btn--demo{ background:var(--demo); color:#fff; }
+  .btn--demo:hover{ background:#185A52; }
+  .btn--ghost{
+    background:transparent; color:var(--ink);
+    border:1px solid var(--line);
+  }
+  .btn--ghost:hover{ border-color:#B5BFCD; background:#fff; }
+
+  /* フォーカス（キーボード操作の見やすさ） */
+  a:focus-visible{
+    outline:2px solid var(--launch);
+    outline-offset:2px;
+    border-radius:8px;
+  }
+
+  footer{
+    max-width:960px; margin:0 auto; padding:0 24px 56px;
+    color:var(--muted); font-size:.84rem;
+  }
+  footer hr{ border:none; border-top:1px solid var(--line); margin:0 0 18px; }
+
+  @media (max-width:520px){
+    .masthead{ padding:36px 20px 32px; }
+    main{ padding:8px 20px 56px; }
+    .actions{ width:100%; }
+    .btn{ flex:1; justify-content:center; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .card{ transition:none; }
+    .card:hover{ transform:none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════
+       ヘッダー：タイトルや説明はここを書き換えてください
+       ════════════════════════════════════════════════ -->
+  <header class="masthead">
+    <div class="masthead__inner">
+      <p class="eyebrow">Internal Tools / 社内ツール</p>
+      <h1>社内ツール ポータル<span class="bar"></span></h1>
+      <p>各チームが制作したツールの確認用ページです。下のリンクから、それぞれのツールを開けます。</p>
+      <p class="meta">最終更新: <b>2026-06-22</b> &nbsp;·&nbsp; 登録ツール <b>2</b> 件</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ════════════════════════════════════════════════
+         セクション1：Webアプリ（ブラウザで開いて使うツール）
+         ════════════════════════════════════════════════ -->
+    <section class="section">
+      <div class="section__head">
+        <span class="tick tick--launch"></span>
+        <h2>Webアプリ</h2>
+        <span>ブラウザで開いて使う</span>
+      </div>
+
+      <div class="grid">
+
+        <!-- ▼▼▼ ツールを1つ追加するときは、この <article>…</article> を
+                 まるごとコピーして、下の3か所を書き換えてください ▼▼▼
+             ① <h3> … ツール名
+             ② <p>  … 説明
+             ③ href="roumu/" … フォルダ名（このページから見た相対パス。末尾の / を忘れずに）
+                 ＋ <span class="path"> の中の表示も同じパスに合わせる -->
+        <article class="card">
+          <h3>従業員マスター</h3>
+          <p>店舗ごとの従業員の労務情報を一括で管理・確認できるツールです。</p>
+          <span class="path">/roumu/</span>
+          <div class="actions">
+            <a class="btn btn--launch" href="roumu/">開く →</a>
+          </div>
+        </article>
+        <!-- ▲▲▲ ここまでが1ツール分 ▲▲▲ -->
+
+        <article class="card">
+          <h3>Claude Code 使い方Q&amp;A ＆ 活用集</h3>
+          <p>Claude の使い方をまとめ、分からない言葉を検索できる入門ガイドです。</p>
+          <span class="path">/claude-guide/</span>
+          <div class="actions">
+            <a class="btn btn--launch" href="claude-guide/">開く →</a>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <hr>
+    社内利用向けの確認用ページです。ツールの追加・更新は本ファイル（index.html）を編集してください。
+  </footer>
+
+</body>
+</html>
